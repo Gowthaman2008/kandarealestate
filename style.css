@@ -187,6 +187,39 @@ button {
   transform: translateY(-2px);
 }
 
+.header-phone-link {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--gold-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  background: rgba(8, 36, 22, 0.3);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: var(--transition-medium);
+}
+
+.header-phone-link i {
+  transition: transform var(--transition-fast);
+}
+
+.header-phone-link:hover {
+  background: var(--gold-primary);
+  color: var(--primary-dark);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.45);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.header-phone-link:hover i {
+  transform: rotate(-15deg) scale(1.1);
+}
+
 /* Section Header Styling */
 .section-header {
   max-width: 600px;
@@ -318,8 +351,16 @@ button {
   width: 100%;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .nav-cta {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Mobile Nav Toggle */
@@ -2088,7 +2129,7 @@ textarea.form-control {
     display: block;
     z-index: 1001;
   }
-  .nav-cta {
+  .header-schedule-btn {
     display: none;
   }
   .hero-title {
@@ -2213,4 +2254,18 @@ textarea.form-control {
     flex-direction: column;
     text-align: center;
   }
+}
+
+/* Contact Info Clickable Links Styling */
+.detail-text p a,
+.leadership-contact-item a,
+.footer-contact-item a {
+  transition: color var(--transition-fast);
+}
+
+.detail-text p a:hover,
+.leadership-contact-item a:hover,
+.footer-contact-item a:hover {
+  color: var(--gold-primary);
+  text-decoration: underline;
 }
