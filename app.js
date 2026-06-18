@@ -157,6 +157,13 @@ function initApp() {
   initLeafletMapWithRetry();
   initContactForm();
   initModalListeners();
+  initScrollReveal();
+  initPremiumCardTilt();
+  initStatsCounter();
+  initBackToTop();
+  initHeroCanvas();
+  initCustomCursor();
+  initMagneticElements();
 }
 
 function initLeafletMapWithRetry(retries = 0) {
@@ -221,18 +228,21 @@ function initHeaderScroll() {
 function initMobileMenu() {
   const toggleBtn = document.getElementById("mobile-nav-toggle");
   const navMenu = document.getElementById("nav-menu");
-  const navLinks = document.querySelectorAll(".nav-link");
+  const navLinks = document.querySelectorAll(".nav-menu .nav-link");
 
   if (!toggleBtn || !navMenu) return;
 
   toggleBtn.addEventListener("click", () => {
     navMenu.classList.toggle("active");
+    document.body.classList.toggle("nav-menu-active-body");
     const icon = toggleBtn.querySelector("i");
     if (icon) {
       if (navMenu.classList.contains("active")) {
         icon.className = "fa-solid fa-xmark";
+        document.body.style.overflow = "hidden"; // Freeze background scrolling
       } else {
         icon.className = "fa-solid fa-bars-staggered";
+        document.body.style.overflow = ""; // Unfreeze background scrolling
       }
     }
   });
@@ -240,6 +250,8 @@ function initMobileMenu() {
   navLinks.forEach(link => {
     link.addEventListener("click", () => {
       navMenu.classList.remove("active");
+      document.body.classList.remove("nav-menu-active-body");
+      document.body.style.overflow = "";
       const icon = toggleBtn.querySelector("i");
       if (icon) {
         icon.className = "fa-solid fa-bars-staggered";
@@ -324,6 +336,9 @@ function renderPropertiesList(properties) {
 
     grid.appendChild(card);
   });
+
+  // Re-run card tilt and spotlight coordinates configuration on new elements
+  initPremiumCardTilt();
 }
 
 // 5. Property Filtering Actions
@@ -423,10 +438,10 @@ function initLeafletMap() {
       <div style="
         width: 20px;
         height: 20px;
-        background-color: #d4af37;
+        background-color: var(--gold-primary);
         border: 2px solid #fff;
         border-radius: 50%;
-        box-shadow: 0 0 12px #d4af37;
+        box-shadow: 0 0 12px var(--gold-primary);
       "></div>
     `,
     iconSize: [20, 20],
@@ -438,17 +453,17 @@ function initLeafletMap() {
   marker.bindPopup(`
     <a href="https://maps.app.goo.gl/C8Ryoi6b7k2HohfY9?g_st=ac" target="_blank" rel="noopener" style="text-decoration: none; color: inherit; display: block;">
       <div style="text-align: center; font-family: 'Outfit', sans-serif; cursor: pointer;">
-        <strong style="color: #d4af37; font-size: 1.1rem; display: block; margin-bottom: 4px;">Kanda Real Estate</strong>
-        <p style="margin: 0; font-size: 0.85rem; color: #fff; margin-bottom: 6px;">406, Salem Main Rd, Komarapalayam</p>
-        <span style="font-size: 0.75rem; color: #d4af37; text-decoration: underline; font-weight: 500;">Get Directions <i class="fa-solid fa-diamond-turn-right" style="margin-left: 2px;"></i></span>
+        <strong style="color: var(--gold-primary); font-size: 1.1rem; display: block; margin-bottom: 4px;">Kanda Real Estate</strong>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-light); margin-bottom: 6px;">406, Salem Main Rd, Komarapalayam</p>
+        <span style="font-size: 0.75rem; color: var(--gold-primary); text-decoration: underline; font-weight: 500;">Get Directions <i class="fa-solid fa-diamond-turn-right" style="margin-left: 2px;"></i></span>
       </div>
     </a>
   `).openPopup();
 
   // Draw circle around office representing immediate service coverage area (200m for zoom level 17 compatibility)
   L.circle(officeCoords, {
-    color: '#d4af37',
-    fillColor: '#103c25',
+    color: 'var(--gold-primary)',
+    fillColor: 'var(--primary-light)',
     fillOpacity: 0.12,
     radius: 200 // 200 meters
   }).addTo(map);
@@ -708,3 +723,374 @@ function navigateModalGallery(direction) {
   currentModalImageIndex = (currentModalImageIndex + direction + prop.images.length) % prop.images.length;
   updateModalGallery();
 }
+
+function initScrollReveal() {
+  // Observe containers to stagger children slide-ins
+  const containers = document.querySelectorAll('.properties-grid, .services-grid, .team-grid, .leadership-contact-grid, .faq-grid, .about-stats');
+  
+  const containerObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const children = entry.target.querySelectorAll('.property-card, .service-card, .team-card, .leadership-contact-card, .faq-item, .stat-item');
+        children.forEach((child, index) => {
+          child.style.setProperty('--i', index);
+          setTimeout(() => {
+            child.classList.remove('reveal-hidden');
+            child.classList.add('reveal-visible');
+          }, index * 80); // Stagger cards by 80ms each
+        });
+        containerObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05 });
+
+  containers.forEach(container => {
+    const children = container.querySelectorAll('.property-card, .service-card, .team-card, .leadership-contact-card, .faq-item, .stat-item');
+    children.forEach(child => {
+      child.classList.add('reveal-hidden');
+    });
+    containerObserver.observe(container);
+  });
+
+  // Observe block level sections (headers, text blocks, image wrappers, map wrappers)
+  const singleElements = document.querySelectorAll('.section-header, .about-content, .about-image-wrapper, .location-info-card, .contact-sidebar, .contact-form-wrapper, .quick-search');
+  
+  const singleObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.remove('reveal-hidden');
+        entry.target.classList.add('reveal-visible');
+        singleObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
+
+  singleElements.forEach(el => {
+    el.classList.add('reveal-hidden');
+    singleObserver.observe(el);
+  });
+}
+
+function initPremiumCardTilt() {
+  const cards = document.querySelectorAll('.property-card:not([data-tilt-applied]), .service-card:not([data-tilt-applied]), .team-card:not([data-tilt-applied]), .location-info-card:not([data-tilt-applied]), .leadership-contact-card:not([data-tilt-applied])');
+  
+  cards.forEach(card => {
+    // Mark as tilt applied so we never duplicate event listeners on re-runs
+    card.setAttribute('data-tilt-applied', 'true');
+    
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Update spotlight position variables
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    });
+  });
+}
+
+function initStatsCounter() {
+  const stats = [
+    { id: 'stat-sold', target: 850, suffix: '+' },
+    { id: 'stat-clients', target: 1200, suffix: '', format: (val) => (val / 1000).toFixed(1) + 'k' },
+    { id: 'stat-locations', target: 15, suffix: '+' }
+  ];
+  
+  const countUp = (el, target, suffix, format) => {
+    let start = 0;
+    const duration = 2000;
+    const startTime = performance.now();
+    
+    const animate = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 4); // easeOutQuart
+      const currentVal = Math.floor(easeProgress * target);
+      
+      el.textContent = format ? format(currentVal) : currentVal + suffix;
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        el.textContent = format ? format(target) : target + suffix;
+      }
+    };
+    requestAnimationFrame(animate);
+  };
+  
+  const targetEl = document.querySelector('.about-stats');
+  if (!targetEl) return;
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        stats.forEach(item => {
+          const el = document.getElementById(item.id);
+          if (el) {
+            countUp(el, item.target, item.suffix, item.format);
+          }
+        });
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  
+  observer.observe(targetEl);
+}
+
+function initBackToTop() {
+  const btn = document.getElementById("back-to-top");
+  if (!btn) return;
+  
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 400) {
+      btn.classList.add("visible");
+    } else {
+      btn.classList.remove("visible");
+    }
+  });
+  
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
+/* 5. Canvas Floating Particle Net in Hero Banner */
+function initHeroCanvas() {
+  const canvas = document.getElementById('hero-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let animationFrameId;
+  let width = canvas.width = canvas.offsetWidth;
+  let height = canvas.height = canvas.offsetHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = canvas.offsetWidth;
+    height = canvas.height = canvas.offsetHeight;
+  });
+  
+  const particles = [];
+  const maxParticles = Math.min(Math.floor((width * height) / 16000), 50); // Balanced particle density
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.35;
+      this.vy = (Math.random() - 0.5) * 0.35;
+      this.radius = Math.random() * 2 + 1;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(83, 158, 64, 0.28)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < maxParticles; i++) {
+    particles.push(new Particle());
+  }
+  
+  let mouse = { x: null, y: null, radius: 140 };
+  const hero = document.getElementById('home');
+  if (hero) {
+    hero.addEventListener('mousemove', (e) => {
+      const rect = hero.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    });
+    
+    hero.addEventListener('mouseleave', () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.update();
+      
+      // Magnetic cursor repulsion warp
+      if (mouse.x !== null && mouse.y !== null) {
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < mouse.radius) {
+          const force = (mouse.radius - dist) / mouse.radius;
+          p.x += (dx / dist) * force * 0.7;
+          p.y += (dy / dist) * force * 0.7;
+        }
+      }
+      
+      p.draw();
+      
+      // Node connections lines
+      for (let j = i + 1; j < particles.length; j++) {
+        const p2 = particles[j];
+        const dx = p.x - p2.x;
+        const dy = p.y - p2.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < 100) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = `rgba(83, 158, 64, ${0.12 * (1 - dist / 100)})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+      
+      // Connect cursor to nodes
+      if (mouse.x !== null && mouse.y !== null) {
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouse.radius - 10) {
+          ctx.beginPath();
+          ctx.moveTo(mouse.x, mouse.y);
+          ctx.lineTo(p.x, p.y);
+          ctx.strokeStyle = `rgba(83, 158, 64, ${0.2 * (1 - dist / mouse.radius)})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    
+    animationFrameId = requestAnimationFrame(animate);
+  }
+  
+  // Pause the canvas loop completely when hero is out of view (saves scroll energy)
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animate();
+      } else {
+        cancelAnimationFrame(animationFrameId);
+      }
+    });
+  }, { threshold: 0.01 });
+  
+  observer.observe(hero);
+}
+
+/* 6. Custom Mouse Follower Cursor */
+function initCustomCursor() {
+  const dot = document.getElementById('cursor-dot');
+  const follower = document.getElementById('cursor-follower');
+  if (!dot || !follower) return;
+
+  if (window.matchMedia('(pointer: coarse)').matches) return;
+
+  let mouseX = 0, mouseY = 0;
+  let followerX = 0, followerY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    
+    dot.style.opacity = '1';
+    follower.style.opacity = '1';
+    
+    dot.style.left = `${mouseX}px`;
+    dot.style.top = `${mouseY}px`;
+  });
+
+  function updateFollower() {
+    const lerpSpeed = 0.15;
+    followerX += (mouseX - followerX) * lerpSpeed;
+    followerY += (mouseY - followerY) * lerpSpeed;
+
+    follower.style.left = `${followerX}px`;
+    follower.style.top = `${followerY}px`;
+
+    requestAnimationFrame(updateFollower);
+  }
+  requestAnimationFrame(updateFollower);
+
+  const activeSelectors = 'a, button, select, input, textarea, .faq-question-btn, .test-nav-dot';
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest(activeSelectors);
+    if (target) {
+      document.body.classList.add('cursor-active');
+    }
+    
+    const propCard = e.target.closest('.property-card');
+    if (propCard && !e.target.closest('button')) {
+      document.body.classList.add('cursor-view-mode');
+    } else {
+      document.body.classList.remove('cursor-view-mode');
+    }
+
+    const testimonials = e.target.closest('.testimonials-slider-container');
+    if (testimonials) {
+      document.body.classList.add('cursor-drag-mode');
+    } else {
+      document.body.classList.remove('cursor-drag-mode');
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target.closest(activeSelectors);
+    if (target) {
+      document.body.classList.remove('cursor-active');
+    }
+    
+    const propCard = e.target.closest('.property-card');
+    if (propCard) {
+      document.body.classList.remove('cursor-view-mode');
+    }
+
+    const testimonials = e.target.closest('.testimonials-slider-container');
+    if (testimonials) {
+      document.body.classList.remove('cursor-drag-mode');
+    }
+  });
+
+  document.addEventListener('mouseleave', () => {
+    dot.style.opacity = '0';
+    follower.style.opacity = '0';
+  });
+}
+
+/* 7. Magnetic Pull Element Animations */
+function initMagneticElements() {
+  if (window.matchMedia('(pointer: coarse)').matches) return;
+  
+  const magnets = document.querySelectorAll('.btn, .header-phone-link, .social-circle, .back-to-top-btn');
+  
+  magnets.forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      
+      // Pull element by 35% offset distance
+      btn.style.transform = `translate(${x * 0.35}px, ${y * 0.35}px) scale(1.02)`;
+      btn.style.transition = 'transform 0.1s ease';
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+      btn.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    });
+  });
+}
+
+
