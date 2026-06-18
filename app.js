@@ -406,30 +406,31 @@ function initLeafletMap() {
   
   const map = L.map('leaflet-map', {
     scrollWheelZoom: true
-  }).setView(officeCoords, 14);
+  }).setView(officeCoords, 17);
 
-  // CartoDB Dark Matter customized dark map layer
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20
+  // Google Maps Roadmap tile layer (shows detailed street names, shops, and POIs exactly like Google Maps)
+  L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>',
+    className: 'map-tiles-dark'
   }).addTo(map);
 
-  // Customize leaflet marker icon with golden marker styling
+  // Customize leaflet marker icon with golden marker styling (larger 20px size for visibility)
   const goldenIcon = L.divIcon({
     className: 'custom-map-marker',
     html: `
       <div style="
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         background-color: #d4af37;
         border: 2px solid #fff;
         border-radius: 50%;
-        box-shadow: 0 0 10px #d4af37;
+        box-shadow: 0 0 12px #d4af37;
       "></div>
     `,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8]
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
   });
 
   // Add marker with popup
@@ -444,12 +445,12 @@ function initLeafletMap() {
     </a>
   `).openPopup();
 
-  // Draw circle around office representing immediate service coverage area
+  // Draw circle around office representing immediate service coverage area (200m for zoom level 17 compatibility)
   L.circle(officeCoords, {
     color: '#d4af37',
     fillColor: '#103c25',
-    fillOpacity: 0.15,
-    radius: 1200 // 1.2 KM
+    fillOpacity: 0.12,
+    radius: 200 // 200 meters
   }).addTo(map);
 }
 
