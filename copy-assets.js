@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const files = ['app.js', 'murugan.png', 'vel.png'];
+const files = ['app.js', 'murugan.png', 'vel.png', 'bala.png'];
 const distDir = path.join(__dirname, 'dist');
 
 // Ensure the dist directory exists before copying
