@@ -435,10 +435,13 @@ function initLeafletMap() {
   // Add marker with popup
   const marker = L.marker(officeCoords, { icon: goldenIcon }).addTo(map);
   marker.bindPopup(`
-    <div style="text-align: center; font-family: 'Outfit', sans-serif;">
-      <strong style="color: #d4af37; font-size: 1.1rem; display: block; margin-bottom: 4px;">Kanda Real Estate</strong>
-      <p style="margin: 0; font-size: 0.85rem; color: #fff;">406, Salem Main Rd, Komarapalayam</p>
-    </div>
+    <a href="https://maps.app.goo.gl/C8Ryoi6b7k2HohfY9?g_st=ac" target="_blank" rel="noopener" style="text-decoration: none; color: inherit; display: block;">
+      <div style="text-align: center; font-family: 'Outfit', sans-serif; cursor: pointer;">
+        <strong style="color: #d4af37; font-size: 1.1rem; display: block; margin-bottom: 4px;">Kanda Real Estate</strong>
+        <p style="margin: 0; font-size: 0.85rem; color: #fff; margin-bottom: 6px;">406, Salem Main Rd, Komarapalayam</p>
+        <span style="font-size: 0.75rem; color: #d4af37; text-decoration: underline; font-weight: 500;">Get Directions <i class="fa-solid fa-diamond-turn-right" style="margin-left: 2px;"></i></span>
+      </div>
+    </a>
   `).openPopup();
 
   // Draw circle around office representing immediate service coverage area
