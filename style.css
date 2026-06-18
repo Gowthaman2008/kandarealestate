@@ -1239,6 +1239,10 @@ button {
   background: var(--primary-dark) !important;
 }
 
+.map-tiles-dark {
+  filter: invert(90%) hue-rotate(110deg) brightness(85%) contrast(115%) saturate(80%);
+}
+
 .leaflet-bar a {
   background-color: var(--primary-medium) !important;
   color: var(--gold-primary) !important;
