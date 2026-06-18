@@ -21,6 +21,15 @@
 </head>
 <body>
 
+  <!-- Global Ambient Background Particles -->
+  <div class="ambient-particles">
+    <div class="particle p-1"></div>
+    <div class="particle p-2"></div>
+    <div class="particle p-3"></div>
+    <div class="particle p-4"></div>
+    <div class="particle p-5"></div>
+  </div>
+
   <!-- HEADER & NAVIGATION -->
   <header class="header" id="header">
     <div class="container">
@@ -33,14 +42,40 @@
         </div>
       </a>
 
-      <!-- Desktop Nav -->
+      <!-- Desktop Nav & Premium Mobile Menu -->
       <nav class="nav-menu" id="nav-menu">
-        <a href="#home" class="nav-link active">Home</a>
-        <a href="#location" class="nav-link">Location</a>
-        <a href="#properties" class="nav-link">Properties</a>
-        <a href="#about" class="nav-link">About Us</a>
-        <a href="#services" class="nav-link">Services</a>
-        <a href="#contact" class="nav-link">Contact</a>
+        <div class="mobile-menu-header">
+          <!-- Golden Vel Logo inside menu -->
+          <img src="vel.png" vite-ignore alt="Kanda Vel Logo" class="mobile-menu-logo-img">
+          <div class="mobile-menu-text">
+            KANDA
+            <span>REAL ESTATE</span>
+          </div>
+        </div>
+
+        <div class="nav-links-container">
+          <a href="#home" class="nav-link active" style="--i: 0;">Home</a>
+          <a href="#location" class="nav-link" style="--i: 1;">Location</a>
+          <a href="#properties" class="nav-link" style="--i: 2;">Properties</a>
+          <a href="#about" class="nav-link" style="--i: 3;">About Us</a>
+          <a href="#services" class="nav-link" style="--i: 4;">Services</a>
+          <a href="#contact" class="nav-link" style="--i: 5;">Contact</a>
+        </div>
+
+        <div class="mobile-menu-footer">
+          <div class="mobile-menu-contact-title">Consultation Desk</div>
+          <a href="tel:+919364111117" class="mobile-menu-contact-item">
+            <i class="fa-solid fa-phone"></i> <span>+91 9364111117</span>
+          </a>
+          <a href="mailto:kandarealestate6@gmail.com" class="mobile-menu-contact-item">
+            <i class="fa-solid fa-envelope"></i> <span>kandarealestate6@gmail.com</span>
+          </a>
+          <div class="mobile-menu-socials">
+            <a href="#" class="social-circle" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" class="social-circle" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="social-circle" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+        </div>
       </nav>
 
       <!-- CTA & Mobile Toggle Wrapper -->
@@ -60,6 +95,9 @@
 
   <!-- HERO SECTION -->
   <section class="hero" id="home">
+    <!-- Interactive Canvas Particle Net -->
+    <canvas id="hero-canvas" class="hero-canvas"></canvas>
+
     <div class="hero-glow"></div>
     <div class="hero-glow-2"></div>
     
@@ -134,7 +172,7 @@
               </div>
               <div class="detail-text">
                 <h4>Email Address</h4>
-                <p><a href="mailto:inquire@kandarealestate.com">inquire@kandarealestate.com</a></p>
+                <p><a href="mailto:kandarealestate6@gmail.com">kandarealestate6@gmail.com</a></p>
               </div>
             </div>
           </div>
@@ -200,7 +238,7 @@
   </section>
 
   <!-- ABOUT US & COMPANY DETAILS -->
-  <section class="section" id="about" style="background: rgba(8, 36, 22, 0.25);">
+  <section class="section" id="about" style="background: var(--primary-light);">
     <div class="container">
       <div class="about-grid">
         
@@ -282,7 +320,7 @@
             </div>
             <div class="leadership-contact-item">
               <i class="fa-solid fa-envelope"></i>
-              <a href="mailto:inquire@kandarealestate.com"><span>inquire@kandarealestate.com</span></a>
+              <a href="mailto:kandarealestate6@gmail.com"><span>kandarealestate6@gmail.com</span></a>
             </div>
             <div class="leadership-contact-item">
               <i class="fa-solid fa-clock"></i>
@@ -388,7 +426,7 @@
               <i class="fa-solid fa-star"></i>
               <i class="fa-solid fa-star"></i>
             </div>
-            <p class="client-quote">"Finding an honest real estate partner in Chennai was difficult until we met the Kanda team. Their professionalism, clear title document checking, and communication made buying our ECR villa incredibly stress-free."</p>
+            <p class="client-quote">"Finding an honest real estate partner in Erode was difficult until we met the Kanda team. Their professionalism, clear title document checking, and communication made buying our ECR villa incredibly stress-free."</p>
             <div class="client-meta">
               <img src="https://images.unsplash.com/photo-1560885673-34b9e5047b91?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Karthik Narayanan" class="client-img">
               <div class="client-info">
@@ -448,7 +486,7 @@
   </section>
 
   <!-- FAQ SECTION -->
-  <section class="section" id="faq" style="background: rgba(8, 36, 22, 0.25);">
+  <section class="section" id="faq" style="background: var(--primary-light);">
     <div class="container">
       <div class="section-header">
         <span class="section-tagline">Answers</span>
@@ -650,7 +688,7 @@
             </div>
             <div class="footer-contact-item">
               <i class="fa-solid fa-envelope"></i>
-              <a href="mailto:inquire@kandarealestate.com"><span>inquire@kandarealestate.com</span></a>
+              <a href="mailto:kandarealestate6@gmail.com"><span>kandarealestate6@gmail.com</span></a>
             </div>
           </div>
         </div>
@@ -783,5 +821,14 @@
   
   <!-- Local Javascript File -->
   <script src="app.js" vite-ignore></script>
+
+  <!-- Sleek Back to Top Button -->
+  <button class="back-to-top-btn" id="back-to-top" aria-label="Back to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <!-- Desktop-only Premium Custom Interactive Cursor -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-follower" id="cursor-follower"></div>
 </body>
 </html>
