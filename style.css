@@ -252,15 +252,15 @@ button {
   gap: 12px;
 }
 
-.logo-icon-svg {
-  width: 32px;
-  height: 32px;
-  fill: var(--gold-primary);
+.logo-icon-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
   filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4));
   transition: var(--transition-medium);
 }
 
-.logo:hover .logo-icon-svg {
+.logo:hover .logo-icon-img {
   transform: scale(1.1) rotate(5deg);
   filter: drop-shadow(0 0 8px var(--gold-light));
 }
@@ -376,45 +376,21 @@ button {
 .hero-bg-vel-container {
   position: absolute;
   right: 8%;
-  top: 8%;
-  width: 380px;
-  height: 700px;
+  top: 50%;
+  width: 320px;
+  height: 85%;
   z-index: 1;
   pointer-events: none;
-  transform: rotate(28deg);
-  opacity: 0.18;
+  transform: translateY(-50%) rotate(15deg);
+  opacity: 0.22;
   filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
-  animation: floatVel 12s ease-in-out infinite alternate;
   transform-origin: center;
 }
-.hero-bg-vel-container.left {
-  left: 8%;
-  right: auto;
-  transform: rotate(-28deg);
-  animation: floatVelLeft 12s ease-in-out infinite alternate;
-}
 
-.hero-bg-vel-svg {
+.hero-bg-vel-img {
   width: 100%;
   height: 100%;
-}
-
-@keyframes floatVel {
-  0% {
-    transform: rotate(28deg) translate(0, 0);
-  }
-  100% {
-    transform: rotate(29.5deg) translate(15px, -10px);
-  }
-}
-
-@keyframes floatVelLeft {
-  0% {
-    transform: rotate(-28deg) translate(0, 0);
-  }
-  100% {
-    transform: rotate(-29.5deg) translate(-15px, -10px);
-  }
+  object-fit: contain;
 }
 
 @keyframes floatGlow {
@@ -466,13 +442,14 @@ button {
   text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
-.title-vel-svg {
-  width: 28px;
-  height: 56px;
+.title-vel-img {
+  width: 50px;
+  height: 100px;
+  object-fit: contain;
   display: inline-block;
   vertical-align: middle;
   margin-right: 14px;
-  margin-top: -6px;
+  margin-top: -12px;
   filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
   animation: velGlowPulse 2.5s ease-in-out infinite alternate;
 }
@@ -2113,15 +2090,16 @@ textarea.form-control {
   .hero-title {
     font-size: 2.3rem;
   }
-  .title-vel-svg {
-    width: 18px;
-    height: 36px;
+  .title-vel-img {
+    width: 32px;
+    height: 64px;
     margin-right: 8px;
-    margin-top: -4px;
+    margin-top: -8px;
   }
   .hero-subtitle {
     font-size: 1rem;
   }
+
   .quick-search {
     margin-top: 30px;
   }
@@ -2135,8 +2113,40 @@ textarea.form-control {
     padding-right: 0;
     padding-bottom: 12px;
   }
+  .search-field select, .search-field input {
+    font-size: 1rem; /* prevent iOS auto-zoom */
+  }
+  .section-title {
+    font-size: 2rem;
+  }
+  .about-subtitle {
+    font-size: 1.5rem;
+  }
+  .property-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+  .filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .filter-select {
+    font-size: 1rem; /* prevent iOS auto-zoom */
+  }
   .properties-grid, .team-grid, .services-grid, .leadership-contact-grid {
     grid-template-columns: 1fr;
+  }
+  .map-wrapper {
+    height: 320px;
+  }
+  .testimonial-slide {
+    padding: 24px 16px;
+  }
+  .client-quote {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
   }
   .contact-grid {
     grid-template-columns: 1fr;
@@ -2153,11 +2163,36 @@ textarea.form-control {
   .modal-body {
     padding: 24px;
   }
+  .newsletter-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .newsletter-input {
+    width: 100%;
+    min-width: 0;
+    font-size: 1rem;
+  }
+  .newsletter-form .btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
+  .section {
+    padding: 50px 0;
+  }
+  .container {
+    padding: 0 16px;
+  }
   .hero-title {
-    font-size: 1.8rem;
+    font-size: 1.9rem;
+  }
+  .section-title {
+    font-size: 1.6rem;
+  }
+  .about-subtitle {
+    font-size: 1.3rem;
   }
   .hero-buttons {
     flex-direction: column;
@@ -2166,6 +2201,7 @@ textarea.form-control {
   .hero-buttons .btn {
     width: 100%;
   }
+
   .footer-grid {
     grid-template-columns: 1fr;
   }
