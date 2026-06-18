@@ -147,23 +147,47 @@ let currentModalProperty = null;
 let currentModalImageIndex = 0;
 
 // Wait for DOM to load
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   initHeaderScroll();
   initMobileMenu();
   renderPropertiesList(propertiesData);
   initPropertyFilters();
   initFAQAccordion();
   initTestimonialSlider();
-  initLeafletMap();
+  initLeafletMapWithRetry();
   initContactForm();
   initModalListeners();
-});
+}
+
+function initLeafletMapWithRetry(retries = 0) {
+  if (typeof L !== 'undefined') {
+    try {
+      initLeafletMap();
+    } catch (error) {
+      console.error("Leaflet map initialization failed:", error);
+    }
+  } else if (retries < 20) {
+    setTimeout(() => {
+      initLeafletMapWithRetry(retries + 1);
+    }, 100);
+  } else {
+    console.warn("Leaflet library failed to load in time. Map could not be loaded.");
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 
 // 1. Header scroll tracking
 function initHeaderScroll() {
   const header = document.getElementById("header");
   const navLinks = document.querySelectorAll(".nav-link");
   const sections = document.querySelectorAll("section");
+
+  if (!header) return;
 
   window.addEventListener("scroll", () => {
     // Scroll styling
@@ -178,7 +202,8 @@ function initHeaderScroll() {
     sections.forEach(section => {
       const sectionTop = section.offsetTop;
       const sectionHeight = section.clientHeight;
-      if (pageYOffset >= (sectionTop - 120)) {
+      const scrollPos = window.pageYOffset || window.scrollY || document.documentElement.scrollTop;
+      if (scrollPos >= (sectionTop - 120)) {
         current = section.getAttribute("id");
       }
     });
@@ -198,20 +223,27 @@ function initMobileMenu() {
   const navMenu = document.getElementById("nav-menu");
   const navLinks = document.querySelectorAll(".nav-link");
 
+  if (!toggleBtn || !navMenu) return;
+
   toggleBtn.addEventListener("click", () => {
     navMenu.classList.toggle("active");
     const icon = toggleBtn.querySelector("i");
-    if (navMenu.classList.contains("active")) {
-      icon.className = "fa-solid fa-xmark";
-    } else {
-      icon.className = "fa-solid fa-bars-staggered";
+    if (icon) {
+      if (navMenu.classList.contains("active")) {
+        icon.className = "fa-solid fa-xmark";
+      } else {
+        icon.className = "fa-solid fa-bars-staggered";
+      }
     }
   });
 
   navLinks.forEach(link => {
     link.addEventListener("click", () => {
       navMenu.classList.remove("active");
-      toggleBtn.querySelector("i").className = "fa-solid fa-bars-staggered";
+      const icon = toggleBtn.querySelector("i");
+      if (icon) {
+        icon.className = "fa-solid fa-bars-staggered";
+      }
     });
   });
 }
@@ -221,6 +253,7 @@ function initMobileMenu() {
 // 4. Render property cards to HTML Grid
 function renderPropertiesList(properties) {
   const grid = document.getElementById("properties-grid");
+  if (!grid) return;
   grid.innerHTML = "";
 
   if (properties.length === 0) {
@@ -299,6 +332,8 @@ function initPropertyFilters() {
   const filterType = document.getElementById("filter-type");
   const filterPrice = document.getElementById("filter-price");
 
+  if (!filterLoc || !filterType || !filterPrice) return;
+
   // Filter triggers
   const executeFilters = () => {
     const loc = filterLoc.value;
@@ -329,10 +364,12 @@ function initPropertyFilters() {
 function initTestimonialSlider() {
   const track = document.getElementById("testimonials-track");
   const dots = document.querySelectorAll(".test-nav-dot");
+  if (!track || !dots.length) return;
   let activeIndex = 0;
   let autoplayInterval;
 
   const updateSlider = (index) => {
+    if (index >= dots.length || index < 0) return;
     dots.forEach(d => d.classList.remove("active"));
     dots[index].classList.add("active");
     track.style.transform = `translateX(-${index * 100}%)`;
@@ -364,11 +401,11 @@ function initTestimonialSlider() {
 
 // 7. Interactive Leaflet Map Configuration
 function initLeafletMap() {
-  // Office coordinates: 406, Salem Main Rd, Komarapalayam, Tamil Nadu [11.4367, 77.7250]
-  const officeCoords = [11.4367, 77.7250];
+  // Office coordinates: 406, Salem Main Rd, Komarapalayam, Tamil Nadu [11.441049390242902, 77.69246379092237]
+  const officeCoords = [11.441049390242902, 77.69246379092237];
   
   const map = L.map('leaflet-map', {
-    scrollWheelZoom: false
+    scrollWheelZoom: true
   }).setView(officeCoords, 14);
 
   // CartoDB Dark Matter customized dark map layer
@@ -418,62 +455,68 @@ function initContactForm() {
   const form = document.getElementById("contact-form");
   const successFeedback = document.getElementById("form-success-feedback");
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    
-    const fields = form.querySelectorAll(".form-control[required]");
-    let isValid = true;
-
-    fields.forEach(field => {
-      const grp = field.closest(".form-group");
+  if (form && successFeedback) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
       
-      // Simple verification check
-      if (field.value.trim() === "") {
-        grp.classList.add("has-error");
-        isValid = false;
-      } else if (field.type === "email" && !validateEmail(field.value)) {
-        grp.classList.add("has-error");
-        isValid = false;
-      } else {
-        grp.classList.remove("has-error");
-      }
+      const fields = form.querySelectorAll(".form-control[required]");
+      let isValid = true;
 
-      // Live change listener to remove errors
-      field.addEventListener("input", () => {
-        if (field.value.trim() !== "") {
+      fields.forEach(field => {
+        const grp = field.closest(".form-group");
+        if (!grp) return;
+        
+        // Simple verification check
+        if (field.value.trim() === "") {
+          grp.classList.add("has-error");
+          isValid = false;
+        } else if (field.type === "email" && !validateEmail(field.value)) {
+          grp.classList.add("has-error");
+          isValid = false;
+        } else {
           grp.classList.remove("has-error");
         }
-      });
-    });
 
-    if (isValid) {
-      // Hide form & show glassmorphic feedback block on success
-      form.style.display = "none";
-      successFeedback.style.display = "block";
-      successFeedback.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  });
+        // Live change listener to remove errors
+        field.addEventListener("input", () => {
+          if (field.value.trim() !== "") {
+            grp.classList.remove("has-error");
+          }
+        });
+      });
+
+      if (isValid) {
+        // Hide form & show glassmorphic feedback block on success
+        form.style.display = "none";
+        successFeedback.style.display = "block";
+        successFeedback.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  }
 
   // Footer Newsletter form
   const newsletterForm = document.getElementById("newsletter-form");
   const newsletterFeedback = document.getElementById("newsletter-feedback");
 
-  newsletterForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const email = document.getElementById("newsletter-email");
-    if (validateEmail(email.value)) {
-      newsletterFeedback.className = "newsletter-feedback success";
-      email.value = "";
-      setTimeout(() => {
-        newsletterFeedback.className = "newsletter-feedback";
-      }, 5000);
-    } else {
-      email.style.borderColor = "var(--red)";
-      email.addEventListener("input", () => {
-        email.style.borderColor = "";
-      });
-    }
-  });
+  if (newsletterForm && newsletterFeedback) {
+    newsletterForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("newsletter-email");
+      if (!email) return;
+      if (validateEmail(email.value)) {
+        newsletterFeedback.className = "newsletter-feedback success";
+        email.value = "";
+        setTimeout(() => {
+          newsletterFeedback.className = "newsletter-feedback";
+        }, 5000);
+      } else {
+        email.style.borderColor = "var(--red)";
+        email.addEventListener("input", () => {
+          email.style.borderColor = "";
+        });
+      }
+    });
+  }
 }
 
 function validateEmail(email) {
@@ -484,11 +527,14 @@ function validateEmail(email) {
 // 9. FAQ Accordions toggle action
 function initFAQAccordion() {
   const faqItems = document.querySelectorAll(".faq-item");
+  if (!faqItems.length) return;
 
   faqItems.forEach(item => {
     const btn = item.querySelector(".faq-question-btn");
     const wrapper = item.querySelector(".faq-answer-wrapper");
     const content = item.querySelector(".faq-answer-content");
+
+    if (!btn || !wrapper || !content) return;
 
     btn.addEventListener("click", () => {
       const isActive = item.classList.contains("active");
@@ -496,7 +542,10 @@ function initFAQAccordion() {
       // Close all other FAQs
       faqItems.forEach(otherItem => {
         otherItem.classList.remove("active");
-        otherItem.querySelector(".faq-answer-wrapper").style.maxHeight = "0px";
+        const otherWrapper = otherItem.querySelector(".faq-answer-wrapper");
+        if (otherWrapper) {
+          otherWrapper.style.maxHeight = "0px";
+        }
       });
 
       if (!isActive) {
@@ -514,6 +563,8 @@ function initModalListeners() {
   const prevBtn = document.getElementById("modal-prev-btn");
   const nextBtn = document.getElementById("modal-next-btn");
   const agentForm = document.getElementById("modal-agent-form");
+
+  if (!modal || !closeBtn || !prevBtn || !nextBtn || !agentForm) return;
 
   // Close modal click
   closeBtn.addEventListener("click", closeModal);
