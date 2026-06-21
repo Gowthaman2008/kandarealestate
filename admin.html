@@ -389,6 +389,209 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Responsive Media Queries */
+    @media (max-width: 768px) {
+      .admin-container {
+        padding: 20px 12px;
+      }
+      
+      .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+      }
+      
+      .dashboard-header .logout-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .admin-info h1 {
+        font-size: 1.5rem !important;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      
+      .admin-stat-card {
+        padding: 16px;
+        gap: 12px;
+      }
+      
+      .admin-stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+      }
+      
+      .admin-stat-info h3 {
+        font-size: 0.75rem;
+      }
+      
+      .admin-stat-info .num {
+        font-size: 1.5rem;
+      }
+      
+      .tabs-nav {
+        gap: 12px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 6px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e0ebe0;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Hide scrollbar for Firefox */
+      }
+      
+      .tabs-nav::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for Chrome, Safari, Opera */
+      }
+      
+      .tab-trigger {
+        padding: 8px 4px;
+        font-size: 0.9rem;
+        flex: 0 0 auto;
+      }
+      
+      .table-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      
+      .search-input-wrapper {
+        max-width: 100%;
+        width: 100%;
+      }
+      
+      .table-actions {
+        width: 100%;
+      }
+      
+      .export-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      /* Card Layout for Tables on Mobile */
+      .table-container {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        overflow-x: visible;
+        margin-bottom: 16px;
+      }
+      
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      
+      thead {
+        display: none;
+      }
+      
+      tr {
+        background: #ffffff;
+        border: 1px solid rgba(83, 158, 64, 0.12);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        padding: 16px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+      }
+      
+      td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #f0f7f0;
+        padding: 12px 0;
+        white-space: normal;
+        word-break: break-word;
+        text-align: right;
+      }
+      
+      td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      
+      td::before {
+        font-weight: 600;
+        color: #356927;
+        font-size: 0.85rem;
+        text-align: left;
+        flex-shrink: 0;
+      }
+      
+      td > * {
+        text-align: right;
+      }
+      
+      /* Label injection for table cells */
+      #table-inquiries td:focus,
+      #table-inquiries td:nth-of-type(1)::before { content: "Date"; }
+      #table-inquiries td:nth-of-type(2)::before { content: "Name"; }
+      #table-inquiries td:nth-of-type(3)::before { content: "Contact Info"; }
+      #table-inquiries td:nth-of-type(4)::before { content: "Interest"; }
+      #table-inquiries td:nth-of-type(5)::before { content: "Message"; }
+      #table-inquiries td:nth-of-type(6)::before { content: "Status"; }
+      #table-inquiries td:nth-of-type(7)::before { content: "Actions"; }
+      
+      /* Stack long messages vertically */
+      #table-inquiries td:nth-of-type(5) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      #table-inquiries td:nth-of-type(5)::before {
+        margin-bottom: 2px;
+      }
+      #table-inquiries td:nth-of-type(5) {
+        text-align: left;
+      }
+      #table-inquiries td:nth-of-type(5) {
+        max-width: 100%;
+        word-break: break-word;
+      }
+      
+      #table-callbacks td:nth-of-type(1)::before { content: "Date"; }
+      #table-callbacks td:nth-of-type(2)::before { content: "Name"; }
+      #table-callbacks td:nth-of-type(3)::before { content: "Phone Number"; }
+      #table-callbacks td:nth-of-type(4)::before { content: "Property Context"; }
+      #table-callbacks td:nth-of-type(5)::before { content: "Status"; }
+      #table-callbacks td:nth-of-type(6)::before { content: "Actions"; }
+      
+      #table-newsletter td:nth-of-type(1)::before { content: "Date Subscribed"; }
+      #table-newsletter td:nth-of-type(2)::before { content: "Email Address"; }
+      #table-newsletter td:nth-of-type(3)::before { content: "Actions"; }
+      
+      .row-actions {
+        justify-content: flex-end;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 24px 16px;
+        border-radius: 12px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .logo-text {
+        font-size: 1.1rem !important;
+      }
+    }
   </style>
 </head>
 <body class="admin-body">
