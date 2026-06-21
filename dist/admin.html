@@ -388,8 +388,345 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Responsive Media Queries */
+    @media (max-width: 768px) {
+      .admin-container {
+        padding: 20px 12px;
+      }
+      
+      .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+      }
+      
+      .dashboard-header .logout-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .admin-info h1 {
+        font-size: 1.5rem !important;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      
+      .admin-stat-card {
+        padding: 16px;
+        gap: 12px;
+      }
+      
+      .admin-stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+      }
+      
+      .admin-stat-info h3 {
+        font-size: 0.75rem;
+      }
+      
+      .admin-stat-info .num {
+        font-size: 1.5rem;
+      }
+      
+      .tabs-nav {
+        gap: 12px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 6px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e0ebe0;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Hide scrollbar for Firefox */
+      }
+      
+      .tabs-nav::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for Chrome, Safari, Opera */
+      }
+      
+      .tab-trigger {
+        padding: 8px 4px;
+        font-size: 0.9rem;
+        flex: 0 0 auto;
+      }
+      
+      .table-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      
+      .search-input-wrapper {
+        max-width: 100%;
+        width: 100%;
+      }
+      
+      .table-actions {
+        width: 100%;
+      }
+      
+      .export-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      /* Card Layout for Tables on Mobile */
+      .table-container {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        overflow-x: visible;
+        margin-bottom: 16px;
+      }
+      
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      
+      thead {
+        display: none;
+      }
+      
+      tr {
+        background: #ffffff;
+        border: 1px solid rgba(83, 158, 64, 0.12);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        padding: 16px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+      }
+      
+      td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid #f0f7f0;
+        padding: 12px 0;
+        white-space: normal;
+        word-break: break-word;
+        text-align: right;
+      }
+      
+      td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      
+      td::before {
+        font-weight: 600;
+        color: #356927;
+        font-size: 0.85rem;
+        text-align: left;
+        flex-shrink: 0;
+      }
+      
+      td > * {
+        text-align: right;
+      }
+      
+      /* Label injection for table cells */
+      #table-inquiries td:focus,
+      #table-inquiries td:nth-of-type(1)::before { content: "Date"; }
+      #table-inquiries td:nth-of-type(2)::before { content: "Name"; }
+      #table-inquiries td:nth-of-type(3)::before { content: "Contact Info"; }
+      #table-inquiries td:nth-of-type(4)::before { content: "Interest"; }
+      #table-inquiries td:nth-of-type(5)::before { content: "Message"; }
+      #table-inquiries td:nth-of-type(6)::before { content: "Status"; }
+      #table-inquiries td:nth-of-type(7)::before { content: "Actions"; }
+      
+      /* Stack long messages vertically */
+      #table-inquiries td:nth-of-type(5) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      #table-inquiries td:nth-of-type(5)::before {
+        margin-bottom: 2px;
+      }
+      #table-inquiries td:nth-of-type(5) {
+        text-align: left;
+      }
+      #table-inquiries td:nth-of-type(5) {
+        max-width: 100%;
+        word-break: break-word;
+      }
+      
+      #table-callbacks td:nth-of-type(1)::before { content: "Date"; }
+      #table-callbacks td:nth-of-type(2)::before { content: "Name"; }
+      #table-callbacks td:nth-of-type(3)::before { content: "Phone Number"; }
+      #table-callbacks td:nth-of-type(4)::before { content: "Property Context"; }
+      #table-callbacks td:nth-of-type(5)::before { content: "Status"; }
+      #table-callbacks td:nth-of-type(6)::before { content: "Actions"; }
+      
+      #table-newsletter td:nth-of-type(1)::before { content: "Date Subscribed"; }
+      #table-newsletter td:nth-of-type(2)::before { content: "Email Address"; }
+      #table-newsletter td:nth-of-type(3)::before { content: "Actions"; }
+
+      #table-properties td:nth-of-type(1)::before { content: "Title"; }
+      #table-properties td:nth-of-type(2)::before { content: "Type"; }
+      #table-properties td:nth-of-type(3)::before { content: "Location"; }
+      #table-properties td:nth-of-type(4)::before { content: "Price"; }
+      #table-properties td:nth-of-type(5)::before { content: "Order"; }
+      #table-properties td:nth-of-type(6)::before { content: "Actions"; }
+      
+      .row-actions {
+        justify-content: flex-end;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 24px 16px;
+        border-radius: 12px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .logo-text {
+        font-size: 1.1rem !important;
+      }
+    }
+
+    /* Property Modal Styles */
+    .property-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(12, 34, 18, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .property-modal-overlay.active {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .property-modal-card {
+      background: #ffffff;
+      border: 1px solid rgba(83, 158, 64, 0.2);
+      border-radius: 16px;
+      padding: 30px;
+      width: 100%;
+      max-width: 650px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(22, 48, 29, 0.12);
+      position: relative;
+    }
+    
+    .property-modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #356927;
+      border-bottom: 2px solid #e0ebe0;
+      padding-bottom: 10px;
+    }
+    
+    .property-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .property-form-grid-full {
+      grid-column: span 2;
+    }
+    
+    .property-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .property-form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #539e40;
+    }
+    
+    .property-form-group input, 
+    .property-form-group select, 
+    .property-form-group textarea {
+      padding: 10px 14px;
+      border: 1px solid #d0ebd0;
+      border-radius: 8px;
+      background-color: #fafdfa;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    
+    .property-form-group input:focus, 
+    .property-form-group select:focus, 
+    .property-form-group textarea:focus {
+      border-color: #539e40;
+      background-color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(83, 158, 64, 0.1);
+    }
+    
+    .property-form-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      border-top: 1px solid rgba(83, 158, 64, 0.15);
+      padding-top: 20px;
+      margin-top: 10px;
+    }
+    
+    .property-form-buttons .btn {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      text-transform: none;
+    }
+    
+    .property-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 1.2rem;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    .property-close-btn:hover {
+      color: #e74c3c;
+    }
+    
+    @media (max-width: 600px) {
+      .property-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .property-form-grid-full {
+        grid-column: span 1;
+      }
+      .property-modal-card {
+        padding: 20px 16px;
+      }
+    }
   </style>
-  <script type="module" crossorigin src="/assets/admin-DbwN-7VR.js"></script>
+  <script type="module" crossorigin src="/assets/admin-BP3S1x4j.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-Dmo4QcqY.js">
   <link rel="stylesheet" crossorigin href="/assets/firebase-config-DpBmsrqt.css">
 </head>
@@ -486,6 +823,9 @@
         </button>
         <button class="tab-trigger" data-target="pane-newsletter">
           <i class="fa-solid fa-paper-plane"></i> Newsletter List
+        </button>
+        <button class="tab-trigger" data-target="pane-properties">
+          <i class="fa-solid fa-house"></i> Manage Properties
         </button>
       </div>
       
@@ -585,11 +925,152 @@
             </table>
           </div>
         </div>
+
+        <!-- Tab 4: Properties -->
+        <div class="tab-pane" id="pane-properties">
+          <div class="table-toolbar">
+            <div class="search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" class="table-search" placeholder="Search properties..." data-table="table-properties">
+            </div>
+            <div class="table-actions">
+              <button class="export-btn" id="add-property-btn" style="background: var(--gold-primary);">
+                Add New Property <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="table-properties">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Type</th>
+                  <th>Location</th>
+                  <th>Price</th>
+                  <th>Order</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="properties-body">
+                <!-- Dynamically filled -->
+              </tbody>
+            </table>
+          </div>
+        </div>
         
       </div>
       
     </div>
     
+  </div>
+
+  <!-- Property Modal Form -->
+  <div id="property-form-modal" class="property-modal-overlay">
+    <div class="property-modal-card">
+      <i class="fa-solid fa-xmark property-close-btn" id="property-modal-close"></i>
+      <h3 class="property-modal-title" id="property-modal-title-text">Add New Property</h3>
+      <form id="property-form">
+        <input type="hidden" id="property-doc-id" value="">
+        <div class="property-form-grid">
+          
+          <div class="property-form-group property-form-grid-full">
+            <label for="prop-title">Property Title *</label>
+            <input type="text" id="prop-title" required placeholder="e.g. Kanda Royal Villa">
+          </div>
+          
+          <div class="property-form-group">
+            <label for="prop-type">Property Type *</label>
+            <select id="prop-type" required>
+              <option value="villa">Villa</option>
+              <option value="apartment">Apartment</option>
+              <option value="commercial">Commercial</option>
+              <option value="land">Premium Land</option>
+            </select>
+          </div>
+          
+          <div class="property-form-group">
+            <label for="prop-location-key">Location Category *</label>
+            <select id="prop-location-key" required>
+              <option value="ecr">ECR</option>
+              <option value="adyar">Adyar</option>
+              <option value="omr">OMR</option>
+              <option value="kodaikanal">Kodaikanal</option>
+              <option value="coimbatore">Coimbatore</option>
+            </select>
+          </div>
+
+          <div class="property-form-group property-form-grid-full">
+            <label for="prop-location">Location Address *</label>
+            <input type="text" id="prop-location" required placeholder="e.g. ECR Road, Chennai">
+          </div>
+
+          <div class="property-form-group">
+            <label for="prop-price">Numeric Price (in ₹) *</label>
+            <input type="number" id="prop-price" required placeholder="e.g. 45000000">
+          </div>
+
+          <div class="property-form-group">
+            <label for="prop-price-label">Display Price Label *</label>
+            <input type="text" id="prop-price-label" required placeholder="e.g. ₹4.50 Crores">
+          </div>
+
+          <div class="property-form-group">
+            <label for="prop-beds">Bedrooms</label>
+            <input type="number" id="prop-beds" value="0" min="0">
+          </div>
+
+          <div class="property-form-group">
+            <label for="prop-baths">Bathrooms / Toilets</label>
+            <input type="number" id="prop-baths" value="0" min="0">
+          </div>
+
+          <div class="property-form-group">
+            <label for="prop-sqft">Square Footage (Sq.Ft) *</label>
+            <input type="number" id="prop-sqft" required placeholder="e.g. 3800">
+          </div>
+
+          <div class="property-form-group">
+            <label for="prop-sort-order">Sort/Display Order *</label>
+            <input type="number" id="prop-sort-order" value="10" required placeholder="Lower numbers appear first">
+          </div>
+
+          <div class="property-form-group property-form-grid-full">
+            <label for="prop-images">Image URLs (one URL per line) *</label>
+            <textarea id="prop-images" rows="3" required placeholder="https://images.unsplash.com/...&#10;https://images.unsplash.com/..."></textarea>
+          </div>
+
+          <div class="property-form-group property-form-grid-full">
+            <label for="prop-features">Key Features (comma-separated) *</label>
+            <input type="text" id="prop-features" required placeholder="e.g. Infinity Pool, Sea View, 24/7 Security">
+          </div>
+
+          <div class="property-form-group property-form-grid-full">
+            <label for="prop-description">Detailed Description *</label>
+            <textarea id="prop-description" rows="4" required placeholder="Write a comprehensive description..."></textarea>
+          </div>
+          
+          <div class="property-form-group">
+            <label for="prop-agent-name">Agent Name</label>
+            <input type="text" id="prop-agent-name" value="Murugan Kanda">
+          </div>
+          
+          <div class="property-form-group">
+            <label for="prop-agent-role">Agent Role</label>
+            <input type="text" id="prop-agent-role" value="Founder & Principal Consultant">
+          </div>
+          
+          <div class="property-form-group property-form-grid-full">
+            <label for="prop-agent-image">Agent Image Path/URL</label>
+            <input type="text" id="prop-agent-image" value="murugan.png">
+          </div>
+
+        </div>
+        <div class="property-form-buttons">
+          <button type="button" class="btn btn-outline" id="property-form-cancel" style="border-color: #aaa; color: #666; background: transparent;">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Property <i class="fa-solid fa-floppy-disk"></i></button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Local Script File -->

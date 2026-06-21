@@ -1,5 +1,5 @@
 import { db } from "./firebase-config.js";
-import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, addDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // properties-data.js (inlined for zero configuration build)
 const propertiesData = [
@@ -148,12 +148,36 @@ const propertiesData = [
 // Initialize variables
 let currentModalProperty = null;
 let currentModalImageIndex = 0;
+let activeProperties = [];
+
+async function fetchPropertiesFromFirestore() {
+  try {
+    const q = query(collection(db, "properties"), orderBy("sortOrder", "asc"));
+    const querySnapshot = await getDocs(q);
+    let list = [];
+    querySnapshot.forEach((doc) => {
+      list.push({ id: doc.id, ...doc.data() });
+    });
+    
+    if (list.length === 0) {
+      console.log("No properties found in Firestore. Using local fallback.");
+      return propertiesData;
+    }
+    return list;
+  } catch (error) {
+    console.error("Error loading properties from Firestore:", error);
+    return propertiesData;
+  }
+}
 
 // Wait for DOM to load
-function initApp() {
+async function initApp() {
   initHeaderScroll();
   initMobileMenu();
-  renderPropertiesList(propertiesData);
+  
+  activeProperties = await fetchPropertiesFromFirestore();
+  
+  renderPropertiesList(activeProperties);
   initPropertyFilters();
   initFAQAccordion();
   initTestimonialSlider();
@@ -358,7 +382,7 @@ function initPropertyFilters() {
     const type = filterType.value;
     const price = filterPrice.value;
 
-    const filtered = propertiesData.filter(prop => {
+    const filtered = activeProperties.filter(prop => {
       const locMatch = loc === "all" || prop.locationKey === loc;
       const typeMatch = type === "all" || prop.type === type;
       
@@ -694,7 +718,7 @@ function initModalListeners() {
 }
 
 function openPropertyModal(id) {
-  const prop = propertiesData.find(p => p.id === id);
+  const prop = activeProperties.find(p => p.id === id);
   if (!prop) return;
 
   currentModalProperty = prop;
