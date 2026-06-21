@@ -1194,6 +1194,10 @@ function initMagneticElements() {
 // DYNAMIC FRONTEND SEARCH FILTERS
 // ==========================================
 
+const LS_LOCATIONS_KEY = 'kanda_custom_locations';
+const LS_TYPES_KEY = 'kanda_custom_types';
+const LS_BUDGETS_KEY = 'kanda_custom_budgets';
+
 const fallbackLocations = [
   { key: "ecr", label: "ECR" },
   { key: "adyar", label: "Adyar" },
@@ -1245,9 +1249,29 @@ function populateFrontendFilters(filters) {
   const filterType = document.getElementById("filter-type");
   const filterPrice = document.getElementById("filter-price");
 
-  const locations = filters.locations && filters.locations.length > 0 ? filters.locations : fallbackLocations;
-  const types = filters.types && filters.types.length > 0 ? filters.types : fallbackTypes;
-  const budgets = filters.budgets && filters.budgets.length > 0 ? filters.budgets : fallbackBudgets;
+  // Read from LocalStorage if Firestore is empty, else use fallback constants
+  let localLocs = [];
+  let localTypes = [];
+  let localBudgets = [];
+  try {
+    localLocs = JSON.parse(localStorage.getItem(LS_LOCATIONS_KEY) || '[]');
+    localTypes = JSON.parse(localStorage.getItem(LS_TYPES_KEY) || '[]');
+    localBudgets = JSON.parse(localStorage.getItem(LS_BUDGETS_KEY) || '[]');
+  } catch (e) {
+    console.error("Failed to parse local storage filters:", e);
+  }
+
+  const locations = filters.locations && filters.locations.length > 0 
+    ? filters.locations 
+    : (localLocs.length > 0 ? localLocs : fallbackLocations);
+
+  const types = filters.types && filters.types.length > 0 
+    ? filters.types 
+    : (localTypes.length > 0 ? localTypes : fallbackTypes);
+
+  const budgets = filters.budgets && filters.budgets.length > 0 
+    ? filters.budgets 
+    : (localBudgets.length > 0 ? localBudgets : fallbackBudgets);
 
   if (filterLoc) {
     filterLoc.innerHTML = `<option value="all">All Locations</option>`;
