@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Kanda Real Estate - Professional Real Estate agency specializing in luxury villas, modern apartments, and premium land plots in Komarapalayam and across Tamil Nadu. Experience excellence, trust, and luxury service.">
+  <title>Kanda Real Estate | Premium Property Listings & Consulting</title>
+  
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet.js (Map library) CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  
+  <!-- Local Stylesheet -->
+  <script type="module" crossorigin src="/assets/main-CZdzrmqG.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-Dmo4QcqY.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-DpBmsrqt.css">
+</head>
+<body>
+
+  <!-- Global Ambient Background Particles -->
+  <div class="ambient-particles">
+    <div class="particle p-1"></div>
+    <div class="particle p-2"></div>
+    <div class="particle p-3"></div>
+    <div class="particle p-4"></div>
+    <div class="particle p-5"></div>
+  </div>
+
+  <!-- HEADER & NAVIGATION -->
+  <header class="header" id="header">
+    <div class="container">
+      <a href="#home" class="logo">
+        <!-- Golden Vel Image in Logo -->
+        <img src="/assets/vel-DpkBPtYz.png" vite-ignore alt="Kanda Vel Logo" class="logo-icon-img">
+        <div class="logo-text">
+          KANDA
+          <span>REAL ESTATE</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav & Premium Mobile Menu -->
+      <nav class="nav-menu" id="nav-menu">
+        <div class="mobile-menu-header">
+          <!-- Golden Vel Logo inside menu -->
+          <img src="/assets/vel-DpkBPtYz.png" vite-ignore alt="Kanda Vel Logo" class="mobile-menu-logo-img">
+          <div class="mobile-menu-text">
+            KANDA
+            <span>REAL ESTATE</span>
+          </div>
+        </div>
+
+        <div class="nav-links-container">
+          <a href="#home" class="nav-link active" style="--i: 0;">Home</a>
+          <a href="#location" class="nav-link" style="--i: 1;">Location</a>
+          <a href="#properties" class="nav-link" style="--i: 2;">Properties</a>
+          <a href="#about" class="nav-link" style="--i: 3;">About Us</a>
+          <a href="#services" class="nav-link" style="--i: 4;">Services</a>
+          <a href="#contact" class="nav-link" style="--i: 5;">Contact</a>
+        </div>
+
+        <div class="mobile-menu-footer">
+          <div class="mobile-menu-contact-title">Consultation Desk</div>
+          <a href="tel:+919364111117" class="mobile-menu-contact-item">
+            <i class="fa-solid fa-phone"></i> <span>+91 9364111117</span>
+          </a>
+          <a href="mailto:kandarealestate6@gmail.com" class="mobile-menu-contact-item">
+            <i class="fa-solid fa-envelope"></i> <span>kandarealestate6@gmail.com</span>
+          </a>
+          <div class="mobile-menu-socials">
+            <a href="#" class="social-circle" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" class="social-circle" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="social-circle" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </nav>
+
+      <!-- CTA & Mobile Toggle Wrapper -->
+      <div class="header-right">
+        <div class="nav-cta">
+          <a href="#contact" class="btn btn-primary header-schedule-btn">Schedule Visit</a>
+          <a href="tel:+919364111117" class="header-phone-link" aria-label="Call Us">
+            <i class="fa-solid fa-phone"></i>
+          </a>
+        </div>
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle Menu">
+          <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="home">
+    <!-- Interactive Canvas Particle Net -->
+    <canvas id="hero-canvas" class="hero-canvas"></canvas>
+
+    <div class="hero-glow"></div>
+    <div class="hero-glow-2"></div>
+    
+    <!-- Glowing background watermarked Vel (slanted on right side) -->
+    <div class="hero-bg-vel-container">
+      <img src="/assets/vel-DpkBPtYz.png" vite-ignore alt="Kanda Vel Watermark" class="hero-bg-vel-img">
+    </div>
+    
+    <div class="container hero-content">
+      <span class="hero-tagline">Trust. Integrity. Prosperity.</span>
+      <h1 class="hero-title">
+        <img src="/assets/vel-DpkBPtYz.png" vite-ignore alt="Kanda Vel Logo" class="title-vel-img">Kanda Real Estate</h1>
+      <p class="hero-subtitle">Discover premium residential villas, apartments, and lucrative commercial properties tailored to your lifestyle and investments.</p>
+      
+      <div class="hero-buttons">
+        <a href="#properties" class="btn btn-primary">Browse Properties <i class="fa-solid fa-arrow-right"></i></a>
+        <a href="#contact" class="btn btn-outline">Consult An Expert</a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- MAP & LOCATION SECTION -->
+  <section class="section" id="location">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tagline">Visit Us</span>
+        <h2 class="section-title">Our Office Location</h2>
+      </div>
+
+      <div class="location-grid">
+        <!-- Leaflet Map Container -->
+        <div class="map-wrapper">
+          <div id="leaflet-map"></div>
+        </div>
+
+        <!-- Office Details card -->
+        <div class="location-info-card">
+          <div>
+            <h3 class="office-title">Kanda Realestate Office</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Located on Salem Main Road, Komarapalayam. Drop by for a cup of coffee and discuss property investments with our specialists.</p>
+          </div>
+          
+          <div class="contact-detail-list">
+            <!-- Address -->
+            <div class="detail-item">
+              <div class="detail-icon-box">
+                <i class="fa-solid fa-location-dot"></i>
+              </div>
+              <div class="detail-text">
+                <h4>Address</h4>
+                <p><a href="https://maps.app.goo.gl/C8Ryoi6b7k2HohfY9?g_st=ac" target="_blank" rel="noopener">406, Salem Main Rd, Komarapalayam, Tamil Nadu, 638183</a></p>
+              </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="detail-item">
+              <div class="detail-icon-box">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div class="detail-text">
+                <h4>Phone Number</h4>
+                <p><a href="tel:+919364111117">+91 9364111117</a> / <a href="tel:+919442494907">+91 9442494907</a></p>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="detail-item">
+              <div class="detail-icon-box">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div class="detail-text">
+                <h4>Email Address</h4>
+                <p><a href="mailto:kandarealestate6@gmail.com">kandarealestate6@gmail.com</a></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Get Directions CTA button linking directly to Google Maps -->
+          <a href="https://maps.app.goo.gl/C8Ryoi6b7k2HohfY9?g_st=ac" target="_blank" rel="noopener" class="btn btn-outline">
+            <i class="fa-solid fa-diamond-turn-right"></i> Get Directions on Google Maps
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PROPERTIES SECTION -->
+  <section class="section" id="properties">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tagline">Our Portfolio</span>
+        <h2 class="section-title">Featured Properties</h2>
+      </div>
+
+      <!-- Filters Interface -->
+      <div class="property-filters">
+        <div class="filter-group">
+          <label for="filter-location"><i class="fa-solid fa-map-pin"></i> Location</label>
+          <select id="filter-location" class="filter-select">
+            <option value="all">All Locations</option>
+            <option value="adyar">Adyar</option>
+            <option value="ecr">ECR</option>
+            <option value="omr">OMR</option>
+            <option value="kodaikanal">Kodaikanal</option>
+            <option value="coimbatore">Coimbatore</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-type"><i class="fa-solid fa-house"></i> Type</label>
+          <select id="filter-type" class="filter-select">
+            <option value="all">All Types</option>
+            <option value="villa">Villa</option>
+            <option value="apartment">Apartment</option>
+            <option value="commercial">Commercial</option>
+            <option value="land">Premium Land</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-price"><i class="fa-solid fa-indian-rupee-sign"></i> Max Price</label>
+          <select id="filter-price" class="filter-select">
+            <option value="all">Any Budget</option>
+            <option value="20000000">Under ₹2 Crores</option>
+            <option value="50000000">Under ₹5 Crores</option>
+            <option value="100000000">Under ₹10 Crores</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Properties Grid Container -->
+      <div class="properties-grid" id="properties-grid">
+        <!-- Injected via JavaScript dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT US & COMPANY DETAILS -->
+  <section class="section" id="about" style="background: var(--primary-light);">
+    <div class="container">
+      <div class="about-grid">
+        
+        <!-- About Image Visual representation -->
+        <div class="about-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" alt="Kanda Real Estate Office Meeting" class="about-img">
+          <div class="experience-badge">
+            <div class="exp-years">18+</div>
+            <div class="exp-text">Years of<br>Trust</div>
+          </div>
+        </div>
+        
+        <!-- About Text Details -->
+        <div class="about-content">
+          <span class="section-tagline">Legacy & Values</span>
+          <h2 class="about-subtitle">Pioneering Luxury Living & Profitable Real Estate in South India</h2>
+          <p>Founded on the principles of transparency and premium craftsmanship, Kanda Real Estate has been guiding clients toward prosperity through smart property acquisitions. We provide unparalleled consulting services for buying, selling, and managing luxury assets.</p>
+          
+          <blockquote style="border-left: 3px solid var(--gold-primary); padding-left: 20px; font-style: italic; color: var(--text-muted); margin: 10px 0;">
+            "Our mission is to stand as a beacon of reliability and security, helping families and enterprises anchor their futures in prime estates."
+          </blockquote>
+          
+          <div class="about-stats">
+            <div class="stat-item">
+              <div class="stat-number" id="stat-sold">850+</div>
+              <div class="stat-label">Properties Sold</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="stat-clients">1.2k</div>
+              <div class="stat-label">Happy Clients</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="stat-locations">15+</div>
+              <div class="stat-label">Service Locations</div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+
+      <!-- TEAM & CONTACT SIDE-BY-SIDE -->
+      <div class="section-header" style="margin-top: 80px; margin-bottom: 40px;">
+        <span class="section-tagline">Our Leadership</span>
+        <h2 class="section-title" style="font-size: 2rem;">Meet Our Expert Consultants</h2>
+      </div>
+      
+      <div class="leadership-contact-grid">
+        <!-- Left: Murugan Kanda Card -->
+        <div class="team-card">
+          <div class="team-photo-wrapper">
+            <img src="/assets/murugan-qfs5zwsH.png" vite-ignore alt="Murugan Kanda" class="team-photo">
+            <div class="team-socials">
+              <a href="#" class="team-social-icon"><i class="fa-brands fa-linkedin-in"></i></a>
+              <a href="#" class="team-social-icon"><i class="fa-brands fa-twitter"></i></a>
+              <a href="#" class="team-social-icon"><i class="fa-solid fa-envelope"></i></a>
+            </div>
+          </div>
+          <div class="team-info">
+            <h3 class="team-name">Jaganathan K.P</h3>
+            <p class="team-role">Founder & Principal Consultant</p>
+          </div>
+        </div>
+
+        <!-- Right: Contact Info Card -->
+        <div class="leadership-contact-card">
+          <h3 class="leadership-contact-title">Contact Info</h3>
+          <div class="leadership-contact-items">
+            <div class="leadership-contact-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <a href="https://maps.app.goo.gl/C8Ryoi6b7k2HohfY9?g_st=ac" target="_blank" rel="noopener"><span>406, Salem Main Rd, Komarapalayam, TN - 638183</span></a>
+            </div>
+            <div class="leadership-contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:+919364111117"><span>+91 9364111117</span></a>
+            </div>
+            <div class="leadership-contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:+919442494907"><span>+91 9442494907</span></a>
+            </div>
+            <div class="leadership-contact-item">
+              <i class="fa-solid fa-envelope"></i>
+              <a href="mailto:kandarealestate6@gmail.com"><span>kandarealestate6@gmail.com</span></a>
+            </div>
+            <div class="leadership-contact-item">
+              <i class="fa-solid fa-clock"></i>
+              <span>Mon – Sat: 9:00 AM – 7:00 PM</span>
+            </div>
+          </div>
+          <a href="#contact" class="btn btn-primary" style="margin-top: 24px; width: 100%;">
+            <i class="fa-solid fa-paper-plane"></i> Get In Touch
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES SECTION -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tagline">What We Offer</span>
+        <h2 class="section-title">Our Professional Services</h2>
+      </div>
+
+      <div class="services-grid">
+        <!-- Service 1 -->
+        <div class="service-card">
+          <div class="service-icon-wrapper">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <h3 class="service-title">Buying Services</h3>
+          <p class="service-description">Find your perfect home or development asset from our off-market properties list, with full documentation guidance.</p>
+          <a href="#contact" class="service-link">Inquire Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <!-- Service 2 -->
+        <div class="service-card">
+          <div class="service-icon-wrapper">
+            <i class="fa-solid fa-tags"></i>
+          </div>
+          <h3 class="service-title">Selling Services</h3>
+          <p class="service-description">Achieve record valuations through target marketing strategies, virtual tours, and professional real estate listings.</p>
+          <a href="#contact" class="service-link">Inquire Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <!-- Service 3 -->
+        <div class="service-card">
+          <div class="service-icon-wrapper">
+            <i class="fa-solid fa-handshake"></i>
+          </div>
+          <h3 class="service-title">Property Management</h3>
+          <p class="service-description">Full-cycle rental collection, maintenance coordination, tenant vetting, and compliance checks on your behalf.</p>
+          <a href="#contact" class="service-link">Inquire Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <!-- Service 4 -->
+        <div class="service-card">
+          <div class="service-icon-wrapper">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <h3 class="service-title">Investment Consulting</h3>
+          <p class="service-description">Formulate structured property investment plans with high ROI, yield forecasting, and market trend reports.</p>
+          <a href="#contact" class="service-link">Inquire Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <!-- Service 5 -->
+        <div class="service-card">
+          <div class="service-icon-wrapper">
+            <i class="fa-solid fa-house-chimney-window"></i>
+          </div>
+          <h3 class="service-title">Rental Services</h3>
+          <p class="service-description">Connect with vetted occupants looking for luxury apartments, duplexes, or flexible commercial workspaces.</p>
+          <a href="#contact" class="service-link">Inquire Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <!-- Service 6 (Bonus: Legal Verification) -->
+        <div class="service-card">
+          <div class="service-icon-wrapper">
+            <i class="fa-solid fa-file-shield"></i>
+          </div>
+          <h3 class="service-title">Title & Legal Vetting</h3>
+          <p class="service-description">Ensure peace of mind with legal title clearance, documentation checks, and registration assistance.</p>
+          <a href="#contact" class="service-link">Inquire Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS SECTION -->
+  <section class="section testimonials-section" id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tagline">Client Reviews</span>
+        <h2 class="section-title">Words from Our Clients</h2>
+      </div>
+
+      <div class="testimonials-slider-container">
+        <div class="testimonials-track" id="testimonials-track">
+          <!-- Testimonial 1 -->
+          <div class="testimonial-slide">
+            <div class="client-stars">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <p class="client-quote">"Finding an honest real estate partner in Erode was difficult until we met the Kanda team. Their professionalism, clear title document checking, and communication made buying our ECR villa incredibly stress-free."</p>
+            <div class="client-meta">
+              <img src="https://images.unsplash.com/photo-1560885673-34b9e5047b91?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Karthik Narayanan" class="client-img">
+              <div class="client-info">
+                <h4 class="client-name">Karthik Narayanan</h4>
+                <p class="client-project">Bought Land, Erode</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 2 -->
+          <div class="testimonial-slide">
+            <div class="client-stars">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              
+            </div>
+            <p class="client-quote">"Vikram and Murugan helped me sell a large parcel of commercial land in Coimbatore. They handled negotiation, taxes, and legal registry processes smoothly. I couldn't recommend them more highly for property deals."</p>
+            <div class="client-meta">
+              <img src="https://plus.unsplash.com/premium_photo-1682089810582-f7b200217b67?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Rajashree Sundaram" class="client-img">
+              <div class="client-info">
+                <h4 class="client-name">Sathya kumar</h4>
+                <p class="client-project">Sold Prime Land, Coimbatore</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 3 -->
+          <div class="testimonial-slide">
+            <div class="client-stars">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <p class="client-quote">"They have been managing my rental portfolio in Adyar for 3 years. Prompt repair resolution, automated statements, and zero rent defaults. Excellent service for NRI investors."</p>
+            <div class="client-meta">
+              <img src="/assets/bala-Dy1SevHl.png" vite-ignore alt="Balakumaran" class="client-img">
+              <div class="client-info">
+                <h4 class="client-name">Balakumaran</h4>
+                <p class="client-project">Bought Building,komarapalayam</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carousel navigation indicators -->
+        <div class="testimonials-nav" id="testimonials-nav">
+          <div class="test-nav-dot active" data-index="0"></div>
+          <div class="test-nav-dot" data-index="1"></div>
+          <div class="test-nav-dot" data-index="2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ SECTION -->
+  <section class="section" id="faq" style="background: var(--primary-light);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tagline">Answers</span>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+      </div>
+
+      <div class="faq-grid">
+        <!-- FAQ 1 -->
+        <div class="faq-item">
+          <button class="faq-question-btn">
+            What documents are verified before listings go online?
+            <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
+          </button>
+          <div class="faq-answer-wrapper">
+            <div class="faq-answer-content">
+              We check the parent deeds, encumbrance certificates (EC) for the last 30 years, patta/chitta status, DTCP/CMDA approvals, and property tax receipts. Our in-house legal advisor vets every property profile before list representation.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item">
+          <button class="faq-question-btn">
+            Are there special loan assistance partnerships available?
+            <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
+          </button>
+          <div class="faq-answer-wrapper">
+            <div class="faq-answer-content">
+              Yes, Kanda Real Estate is officially partnered with top financial institutions including SBI, HDFC, ICICI, and LIC Housing Finance to provide quick pre-approvals and attractive interest rates for our clients.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item">
+          <button class="faq-question-btn">
+            What fees apply when buying properties through Kanda?
+            <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
+          </button>
+          <div class="faq-answer-wrapper">
+            <div class="faq-answer-content">
+              For standard residential properties, our consultation agency fee is 1% to 2% of the deal volume. There are no hidden fees. All registration, stamp duty, and legal documentation fees are quoted transparently.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="faq-item">
+          <button class="faq-question-btn">
+            Can NRI clients perform transactions remotely?
+            <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
+          </button>
+          <div class="faq-answer-wrapper">
+            <div class="faq-answer-content">
+              Absolutely. Over 40% of our luxury villa clients are NRIs based in the US, UK, and UAE. We handle remote digital showcases, document translation, POA coordination, and online escrow services.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT & FORM SECTION -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="contact-grid">
+        
+        <!-- Sidebar Info -->
+        <div class="contact-sidebar">
+          <div>
+            <h2 class="sidebar-title">Ready to Find Your Dream Estate?</h2>
+            <p class="sidebar-desc">Get in touch with Kanda Real Estate today. Whether you have questions about a specific listing, need a valuation on your home, or want to explore investment portfolios, we are here to guide you.</p>
+          </div>
+
+          <div>
+            <table class="office-hours-table">
+              <tbody>
+                <tr>
+                  <td>Monday - Friday</td>
+                  <td>9:00 AM - 7:00 PM</td>
+                </tr>
+                <tr>
+                  <td>Saturday</td>
+                  <td>10:00 AM - 5:00 PM</td>
+                </tr>
+                <tr>
+                  <td>Sunday</td>
+                  <td>Prior Appointment Only</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="social-links">
+              <a href="#" class="social-circle" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+              <a href="#" class="social-circle" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a href="#" class="social-circle" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+              <a href="#" class="social-circle" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inquiry Form -->
+        <div class="contact-form-wrapper">
+          <!-- Form submission success state -->
+          <div class="form-success-feedback" id="form-success-feedback">
+            <i class="fa-regular fa-circle-check"></i>
+            <h3>Message Sent Successfully!</h3>
+            <p>Thank you for contacting Kanda Real Estate. An expert property consultant will call you shortly within 2 business hours.</p>
+          </div>
+
+          <form id="contact-form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="form-name">Full Name</label>
+                <input type="text" id="form-name" class="form-control" placeholder="John Doe" required>
+                <span class="form-error-msg">Please enter your name</span>
+              </div>
+              <div class="form-group">
+                <label for="form-email">Email Address</label>
+                <input type="email" id="form-email" class="form-control" placeholder="john@example.com" required>
+                <span class="form-error-msg">Please enter a valid email address</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="form-phone">Phone Number</label>
+                <input type="tel" id="form-phone" class="form-control" placeholder="+91 98765 43210" required>
+                <span class="form-error-msg">Please enter your phone number</span>
+              </div>
+              <div class="form-group">
+                <label for="form-interest">Property Interest</label>
+                <select id="form-interest" class="form-control">
+                  <option value="luxury-villa">Luxury Villa Listings</option>
+                  <option value="apartment">Modern Apartments</option>
+                  <option value="commercial">Commercial Building</option>
+                  <option value="land-plot">Premium Land Plots</option>
+                  <option value="general-consult">General Consultation</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="form-message">Your Message</label>
+              <textarea id="form-message" class="form-control" placeholder="Tell us more about your ideal budget, preferred location, and timelines..." required></textarea>
+              <span class="form-error-msg">Please write a short message regarding your interest</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Send Inquiry <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <!-- About Column -->
+        <div class="footer-col">
+          <a href="#home" class="logo" style="margin-bottom: 10px;">
+            <img src="/assets/vel-DpkBPtYz.png" vite-ignore alt="Kanda Vel Logo" class="logo-icon-img" style="width: 32px; height: 32px; object-fit: contain;">
+            <div class="logo-text" style="font-size: 1.15rem;">
+              KANDA
+              <span style="font-size: 0.65rem;">REAL ESTATE</span>
+            </div>
+          </a>
+          <p class="footer-about-text">Kanda Real Estate sets the benchmark for trust, luxury properties, and legal clarity across Tamil Nadu and South India since 2008.</p>
+        </div>
+
+        <!-- Quick Links Column -->
+        <div class="footer-col">
+          <h3 class="footer-title">Quick Links</h3>
+          <ul class="footer-links-list">
+            <li><a href="#home" class="footer-link"><i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i> Home</a></li>
+            <li><a href="#location" class="footer-link"><i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i> Office Location</a></li>
+            <li><a href="#properties" class="footer-link"><i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i> Properties</a></li>
+            <li><a href="#about" class="footer-link"><i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i> About Us</a></li>
+            <li><a href="#services" class="footer-link"><i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i> Services</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact details column -->
+        <div class="footer-col">
+          <h3 class="footer-title">Contact Info</h3>
+          <div class="footer-contact-info">
+            <div class="footer-contact-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <a href="https://maps.app.goo.gl/C8Ryoi6b7k2HohfY9?g_st=ac" target="_blank" rel="noopener"><span>406, Salem Main Rd, Komarapalayam, TN - 638183</span></a>
+            </div>
+            <div class="footer-contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <span><a href="tel:+919364111117">+91 9364111117</a> / <a href="tel:+919442494907">+91 9442494907</a></span>
+            </div>
+            <div class="footer-contact-item">
+              <i class="fa-solid fa-envelope"></i>
+              <a href="mailto:kandarealestate6@gmail.com"><span>kandarealestate6@gmail.com</span></a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Newsletter Column -->
+        <div class="footer-col">
+          <h3 class="footer-title">Newsletter</h3>
+          <p class="footer-newsletter-text">Subscribe to our weekly newsletter to receive pre-launch villa deals and property investment advice.</p>
+          <form id="newsletter-form" class="newsletter-form" novalidate>
+            <input type="email" id="newsletter-email" class="newsletter-input" placeholder="Your Email" required>
+            <button type="submit" class="btn btn-primary" aria-label="Subscribe"><i class="fa-solid fa-paper-plane"></i></button>
+          </form>
+          <span class="newsletter-feedback" id="newsletter-feedback">Subscribed successfully!</span>
+        </div>
+
+      </div>
+
+      <!-- Footer Bottom -->
+      <div class="footer-bottom">
+        <p>&copy; 2026 Kanda Real Estate. All Rights Reserved. Built with trust and dedication.</p>
+        <div class="footer-bottom-links">
+          <a href="admin.html"><i class="fa-solid fa-lock" style="font-size: 0.8rem; margin-right: 4px;"></i> Owner Login</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Sitemap</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- DYNAMIC PROPERTY VIEW MODAL OVERLAY -->
+  <div class="modal-overlay" id="property-modal">
+    <div class="modal-container">
+      <button class="modal-close-btn" id="modal-close-btn" aria-label="Close Modal"><i class="fa-solid fa-xmark"></i></button>
+      
+      <!-- Modal Main Image Slider -->
+      <div class="modal-gallery">
+        <img src="" alt="Property Gallery Image" class="modal-gallery-img" id="modal-gallery-img">
+        <button class="modal-gallery-nav modal-gallery-prev" id="modal-prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="modal-gallery-nav modal-gallery-next" id="modal-next-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="modal-gallery-dots" id="modal-dots-container"></div>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-header-info">
+          <div class="modal-title-box">
+            <h3 id="modal-title">Property Title</h3>
+            <div class="modal-location"><i class="fa-solid fa-location-dot"></i> <span id="modal-location">Location Address</span></div>
+          </div>
+          <div class="modal-price-box">
+            <span class="modal-price-label">Consulting Price</span>
+            <div class="modal-price" id="modal-price">₹0.00</div>
+          </div>
+        </div>
+
+        <!-- Key specs bar -->
+        <div class="modal-specs">
+          <div class="modal-spec-item">
+            <div class="modal-spec-icon"><i class="fa-solid fa-bed"></i></div>
+            <div class="modal-spec-text">
+              <span>Bedrooms</span>
+              <strong id="modal-beds">0</strong>
+            </div>
+          </div>
+          <div class="modal-spec-item">
+            <div class="modal-spec-icon"><i class="fa-solid fa-bath"></i></div>
+            <div class="modal-spec-text">
+              <span>Bathrooms</span>
+              <strong id="modal-baths">0</strong>
+            </div>
+          </div>
+          <div class="modal-spec-item">
+            <div class="modal-spec-icon"><i class="fa-solid fa-ruler-combined"></i></div>
+            <div class="modal-spec-text">
+              <span>Square Footage</span>
+              <strong id="modal-sqft">0 Sq.Ft</strong>
+            </div>
+          </div>
+          <div class="modal-spec-item">
+            <div class="modal-spec-icon"><i class="fa-solid fa-building"></i></div>
+            <div class="modal-spec-text">
+              <span>Status</span>
+              <strong id="modal-status">Verified</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail content grid -->
+        <div class="modal-details-grid">
+          <div class="modal-description">
+            <h4>About this Property</h4>
+            <p id="modal-description-text">Detailed description goes here...</p>
+            
+            <div class="modal-features">
+              <h5>Property Amenities & Key Features</h5>
+              <div class="modal-features-list" id="modal-features-list">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Agent booking card inside modal -->
+          <div class="modal-agent-card">
+            <h4 class="modal-agent-title">Schedule Viewing</h4>
+            <div class="modal-agent-profile">
+              <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&q=80" alt="Consultant Murugan" class="modal-agent-img" id="modal-agent-img">
+              <div>
+                <div class="modal-agent-name" id="modal-agent-name">Murugan Kanda</div>
+                <div class="modal-agent-role" id="modal-agent-role">Principal Consultant</div>
+              </div>
+            </div>
+            
+            <!-- Quick Agent query contact form -->
+            <form id="modal-agent-form" class="modal-agent-form">
+              <div class="form-group">
+                <input type="text" id="modal-form-name" class="form-control" placeholder="Your Name" required>
+              </div>
+              <div class="form-group">
+                <input type="tel" id="modal-form-phone" class="form-control" placeholder="Your Phone Number" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Request Instant Callback</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet.js (Map Library) script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Local Javascript File -->
+
+  <!-- Sleek Back to Top Button -->
+  <button class="back-to-top-btn" id="back-to-top" aria-label="Back to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <!-- Desktop-only Premium Custom Interactive Cursor -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-follower" id="cursor-follower"></div>
+</body>
+</html>
