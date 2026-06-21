@@ -725,9 +725,147 @@
         padding: 20px 16px;
       }
     }
+
+    /* Preview Image styling in form */
+    .preview-image-card {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border: 1px solid rgba(83, 158, 64, 0.2);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .preview-image-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .preview-image-delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(231, 76, 60, 0.85);
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    
+    .preview-image-delete-btn:hover {
+      background: rgba(231, 76, 60, 1);
+    }
+
+    /* Filters Manager specific styles */
+    .filters-manager-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 10px;
+    }
+    
+    .filter-col-card {
+      background: #ffffff;
+      border: 1px solid rgba(83, 158, 64, 0.12);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+    
+    .filter-col-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #356927;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e0ebe0;
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-inline-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .filter-inline-form input {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 12px;
+      border: 1px solid #d0ebd0;
+      border-radius: 6px;
+      background-color: #fafdfa;
+      font-size: 0.85rem;
+    }
+    
+    .filter-inline-form input:focus {
+      border-color: #539e40;
+      background-color: #ffffff;
+      outline: none;
+    }
+    
+    .filter-inline-form .btn-sm {
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    
+    .filter-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    
+    .filter-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #fafdfa;
+      border: 1px solid rgba(83, 158, 64, 0.06);
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+    
+    .filter-item-row:hover {
+      background: #f4faf4;
+    }
+    
+    .filter-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .filter-item-label {
+      font-weight: 600;
+      color: #1e1e1e;
+      font-size: 0.9rem;
+    }
+    
+    .filter-item-key {
+      font-size: 0.75rem;
+      color: #666;
+      font-family: monospace;
+    }
   </style>
-  <script type="module" crossorigin src="/assets/admin-BP3S1x4j.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-Dmo4QcqY.js">
+  <script type="module" crossorigin src="/assets/admin-C_iettaS.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-C-6acxfH.js">
   <link rel="stylesheet" crossorigin href="/assets/firebase-config-DpBmsrqt.css">
 </head>
 <body class="admin-body">
@@ -826,6 +964,9 @@
         </button>
         <button class="tab-trigger" data-target="pane-properties">
           <i class="fa-solid fa-house"></i> Manage Properties
+        </button>
+        <button class="tab-trigger" data-target="pane-filters">
+          <i class="fa-solid fa-sliders"></i> Manage Filters
         </button>
       </div>
       
@@ -957,6 +1098,52 @@
             </table>
           </div>
         </div>
+
+        <!-- Tab 5: Manage Filters -->
+        <div class="tab-pane" id="pane-filters">
+          <div class="filters-manager-grid">
+            
+            <!-- Column 1: Locations -->
+            <div class="filter-col-card">
+              <h3 class="filter-col-title"><i class="fa-solid fa-map-pin"></i> Manage Locations</h3>
+              <form id="add-location-form" class="filter-inline-form">
+                <input type="text" id="new-loc-label" placeholder="Label (e.g. Adyar)" required>
+                <input type="text" id="new-loc-key" placeholder="Key (e.g. adyar)" required>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+              </form>
+              <div class="filter-items-list" id="locations-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+            
+            <!-- Column 2: Property Types -->
+            <div class="filter-col-card">
+              <h3 class="filter-col-title"><i class="fa-solid fa-house"></i> Manage Types</h3>
+              <form id="add-type-form" class="filter-inline-form">
+                <input type="text" id="new-type-label" placeholder="Label (e.g. Villa)" required>
+                <input type="text" id="new-type-key" placeholder="Key (e.g. villa)" required>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+              </form>
+              <div class="filter-items-list" id="types-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+            
+            <!-- Column 3: Budgets -->
+            <div class="filter-col-card">
+              <h3 class="filter-col-title"><i class="fa-solid fa-indian-rupee-sign"></i> Manage Budgets</h3>
+              <form id="add-budget-form" class="filter-inline-form">
+                <input type="text" id="new-budget-label" placeholder="Label (e.g. ₹2 Crores)" required>
+                <input type="number" id="new-budget-value" placeholder="Value (e.g. 20000000)" required>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+              </form>
+              <div class="filter-items-list" id="budgets-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+            
+          </div>
+        </div>
         
       </div>
       
@@ -981,21 +1168,14 @@
           <div class="property-form-group">
             <label for="prop-type">Property Type *</label>
             <select id="prop-type" required>
-              <option value="villa">Villa</option>
-              <option value="apartment">Apartment</option>
-              <option value="commercial">Commercial</option>
-              <option value="land">Premium Land</option>
+              <option value="" disabled selected>Select Type</option>
             </select>
           </div>
           
           <div class="property-form-group">
             <label for="prop-location-key">Location Category *</label>
             <select id="prop-location-key" required>
-              <option value="ecr">ECR</option>
-              <option value="adyar">Adyar</option>
-              <option value="omr">OMR</option>
-              <option value="kodaikanal">Kodaikanal</option>
-              <option value="coimbatore">Coimbatore</option>
+              <option value="" disabled selected>Select Location</option>
             </select>
           </div>
 
@@ -1035,8 +1215,14 @@
           </div>
 
           <div class="property-form-group property-form-grid-full">
-            <label for="prop-images">Image URLs (one URL per line) *</label>
-            <textarea id="prop-images" rows="3" required placeholder="https://images.unsplash.com/...&#10;https://images.unsplash.com/..."></textarea>
+            <label>Property Photos *</label>
+            <input type="file" id="prop-images-file" accept="image/*" multiple style="display: none;">
+            <button type="button" class="export-btn" id="upload-photos-trigger-btn" style="background: var(--gold-primary); align-self: flex-start; margin-bottom: 10px;">
+              Choose Photos <i class="fa-solid fa-images"></i>
+            </button>
+            <div id="prop-images-preview-container" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px;">
+              <!-- Dynamic previews loaded here -->
+            </div>
           </div>
 
           <div class="property-form-group property-form-grid-full">
@@ -1047,21 +1233,6 @@
           <div class="property-form-group property-form-grid-full">
             <label for="prop-description">Detailed Description *</label>
             <textarea id="prop-description" rows="4" required placeholder="Write a comprehensive description..."></textarea>
-          </div>
-          
-          <div class="property-form-group">
-            <label for="prop-agent-name">Agent Name</label>
-            <input type="text" id="prop-agent-name" value="Murugan Kanda">
-          </div>
-          
-          <div class="property-form-group">
-            <label for="prop-agent-role">Agent Role</label>
-            <input type="text" id="prop-agent-role" value="Founder & Principal Consultant">
-          </div>
-          
-          <div class="property-form-group property-form-grid-full">
-            <label for="prop-agent-image">Agent Image Path/URL</label>
-            <input type="text" id="prop-agent-image" value="murugan.png">
           </div>
 
         </div>

@@ -1,4 +1,4 @@
-import { db, auth } from "./firebase-config.js";
+import { db, auth, storage } from "./firebase-config.js";
 import { 
   collection, 
   getDocs, 
@@ -14,10 +14,16 @@ import {
   signOut, 
   onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+  ref, 
+  uploadBytes, 
+  getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 // Admin Panel State
 let currentUser = null;
-let databaseData = { newsletter: [], inquiries: [], callbacks: [], stats: {}, properties: [] };
+let databaseData = { newsletter: [], inquiries: [], callbacks: [], stats: {}, properties: [], locations: [], types: [], budgets: [] };
+let propertyFormImages = [];
 
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
@@ -31,6 +37,7 @@ function initAdmin() {
   setupSearchListeners();
   setupExportListeners();
   setupPropertyListeners();
+  setupFilterManagementListeners();
 }
 
 // ==========================================
@@ -109,13 +116,28 @@ async function fetchDashboardData() {
     const inquiriesQuery = query(collection(db, "inquiries"), orderBy("created_at", "desc"));
     const callbacksQuery = query(collection(db, "callbacks"), orderBy("created_at", "desc"));
     const propertiesQuery = query(collection(db, "properties"), orderBy("sortOrder", "asc"));
+    const locationsQuery = query(collection(db, "locations"), orderBy("label", "asc"));
+    const typesQuery = query(collection(db, "types"), orderBy("label", "asc"));
+    const budgetsQuery = query(collection(db, "budgets"), orderBy("value", "asc"));
 
-    const [newsletterSnap, inquiriesSnap, callbacksSnap, propertiesSnap] = await Promise.all([
+    const [newsletterSnap, inquiriesSnap, callbacksSnap, propertiesSnap, locationsSnap, typesSnap, budgetsSnap] = await Promise.all([
       getDocs(newsletterQuery),
       getDocs(inquiriesQuery),
       getDocs(callbacksQuery),
       getDocs(propertiesQuery).catch(err => {
         console.warn("Failed to fetch properties:", err);
+        return { docs: [] };
+      }),
+      getDocs(locationsQuery).catch(err => {
+        console.warn("Failed to fetch locations:", err);
+        return { docs: [] };
+      }),
+      getDocs(typesQuery).catch(err => {
+        console.warn("Failed to fetch types:", err);
+        return { docs: [] };
+      }),
+      getDocs(budgetsQuery).catch(err => {
+        console.warn("Failed to fetch budgets:", err);
         return { docs: [] };
       })
     ]);
@@ -125,6 +147,9 @@ async function fetchDashboardData() {
     databaseData.inquiries = inquiriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     databaseData.callbacks = callbacksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     databaseData.properties = propertiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    databaseData.locations = locationsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    databaseData.types = typesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    databaseData.budgets = budgetsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Seed default properties if database is empty
     if (databaseData.properties.length === 0) {
@@ -133,6 +158,35 @@ async function fetchDashboardData() {
       // Refetch after seeding
       const freshSnap = await getDocs(propertiesQuery);
       databaseData.properties = freshSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    // Seed default filters if empty
+    let needFiltersRefetch = false;
+    if (databaseData.locations.length === 0) {
+      console.log("No locations found in Firestore. Seeding default locations...");
+      await seedDefaultLocations();
+      needFiltersRefetch = true;
+    }
+    if (databaseData.types.length === 0) {
+      console.log("No types found in Firestore. Seeding default types...");
+      await seedDefaultTypes();
+      needFiltersRefetch = true;
+    }
+    if (databaseData.budgets.length === 0) {
+      console.log("No budgets found in Firestore. Seeding default budgets...");
+      await seedDefaultBudgets();
+      needFiltersRefetch = true;
+    }
+
+    if (needFiltersRefetch) {
+      const [freshLocs, freshTypes, freshBudgets] = await Promise.all([
+        getDocs(locationsQuery),
+        getDocs(typesQuery),
+        getDocs(budgetsQuery)
+      ]);
+      databaseData.locations = freshLocs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      databaseData.types = freshTypes.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      databaseData.budgets = freshBudgets.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
     
     // Aggregate statistics
@@ -177,6 +231,8 @@ function renderTables() {
   renderCallbacksTable();
   renderNewsletterTable();
   renderPropertiesTable();
+  renderFiltersLists();
+  populatePropertyFormSelects();
 }
 
 // Render Contact Inquiries Table
@@ -523,18 +579,14 @@ window.openEditPropertyModal = function(id) {
   document.getElementById('prop-sqft').value = prop.sqft || 0;
   document.getElementById('prop-sort-order').value = prop.sortOrder || 10;
   
-  // Join images by newline
-  document.getElementById('prop-images').value = (prop.images || []).join('\n');
+  // Set images array and render previews
+  propertyFormImages = [...(prop.images || [])];
+  renderFormImagesPreview();
   
   // Join features by comma
   document.getElementById('prop-features').value = (prop.features || []).join(', ');
   
   document.getElementById('prop-description').value = prop.description || '';
-  
-  // Agent fields
-  document.getElementById('prop-agent-name').value = prop.agent?.name || 'Murugan Kanda';
-  document.getElementById('prop-agent-role').value = prop.agent?.role || 'Founder & Principal Consultant';
-  document.getElementById('prop-agent-image').value = prop.agent?.image || 'murugan.png';
   
   // Show Modal
   document.getElementById('property-form-modal').classList.add('active');
@@ -555,12 +607,59 @@ window.deleteProperty = async function(id) {
   }
 };
 
+function renderFormImagesPreview() {
+  const container = document.getElementById('prop-images-preview-container');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  propertyFormImages.forEach((img, index) => {
+    const card = document.createElement('div');
+    card.className = 'preview-image-card';
+    
+    const imgEl = document.createElement('img');
+    if (typeof img === 'string') {
+      imgEl.src = img;
+    } else if (img instanceof File) {
+      imgEl.src = URL.createObjectURL(img);
+    }
+    card.appendChild(imgEl);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'preview-image-delete-btn';
+    deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+    deleteBtn.addEventListener('click', () => {
+      propertyFormImages.splice(index, 1);
+      renderFormImagesPreview();
+    });
+    card.appendChild(deleteBtn);
+    
+    container.appendChild(card);
+  });
+}
+
 function setupPropertyListeners() {
   const addBtn = document.getElementById('add-property-btn');
   const modal = document.getElementById('property-form-modal');
   const closeBtn = document.getElementById('property-modal-close');
   const cancelBtn = document.getElementById('property-form-cancel');
   const form = document.getElementById('property-form');
+  
+  const fileInput = document.getElementById('prop-images-file');
+  const uploadTriggerBtn = document.getElementById('upload-photos-trigger-btn');
+  
+  if (uploadTriggerBtn && fileInput) {
+    uploadTriggerBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      propertyFormImages = [...propertyFormImages, ...files];
+      renderFormImagesPreview();
+      fileInput.value = ''; // Reset input to let them upload same images again
+    });
+  }
   
   if (addBtn) {
     addBtn.addEventListener('click', () => {
@@ -569,10 +668,8 @@ function setupPropertyListeners() {
       document.getElementById('property-doc-id').value = '';
       document.getElementById('property-modal-title-text').textContent = 'Add New Property';
       
-      // Set default agent values
-      document.getElementById('prop-agent-name').value = 'Murugan Kanda';
-      document.getElementById('prop-agent-role').value = 'Founder & Principal Consultant';
-      document.getElementById('prop-agent-image').value = 'murugan.png';
+      propertyFormImages = [];
+      renderFormImagesPreview();
       
       // Show Modal
       modal.classList.add('active');
@@ -595,42 +692,61 @@ function setupPropertyListeners() {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      if (propertyFormImages.length === 0) {
+        alert('Please choose at least one photo for the property.');
+        return;
+      }
+      
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalBtnHtml = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Uploading Photos & Saving... <i class="fa-solid fa-spinner fa-spin"></i>';
+      
       const docId = document.getElementById('property-doc-id').value;
       
-      // Parse image URLs (one per line)
-      const imagesText = document.getElementById('prop-images').value;
-      const images = imagesText.split('\n')
-        .map(url => url.trim())
-        .filter(url => url !== '');
-        
-      // Parse features (comma separated)
-      const featuresText = document.getElementById('prop-features').value;
-      const features = featuresText.split(',')
-        .map(f => f.trim())
-        .filter(f => f !== '');
-        
-      const propertyPayload = {
-        title: document.getElementById('prop-title').value.trim(),
-        type: document.getElementById('prop-type').value,
-        locationKey: document.getElementById('prop-location-key').value,
-        location: document.getElementById('prop-location').value.trim(),
-        price: parseInt(document.getElementById('prop-price').value),
-        priceLabel: document.getElementById('prop-price-label').value.trim(),
-        beds: parseInt(document.getElementById('prop-beds').value || 0),
-        baths: parseInt(document.getElementById('prop-baths').value || 0),
-        sqft: parseInt(document.getElementById('prop-sqft').value),
-        sortOrder: parseInt(document.getElementById('prop-sort-order').value || 10),
-        images: images,
-        features: features,
-        description: document.getElementById('prop-description').value.trim(),
-        agent: {
-          name: document.getElementById('prop-agent-name').value.trim() || 'Murugan Kanda',
-          role: document.getElementById('prop-agent-role').value.trim() || 'Founder & Principal Consultant',
-          image: document.getElementById('prop-agent-image').value.trim() || 'murugan.png'
-        }
-      };
-      
       try {
+        // Upload any local files to Firebase Storage
+        const uploadPromises = propertyFormImages.map(async (img) => {
+          if (typeof img === 'string') {
+            return img; // Already uploaded URL
+          } else if (img instanceof File) {
+            // Upload local file
+            const fileRef = ref(storage, `properties/${Date.now()}_${img.name}`);
+            const snapshot = await uploadBytes(fileRef, img);
+            const downloadUrl = await getDownloadURL(snapshot.ref);
+            return downloadUrl;
+          }
+        });
+        
+        const finalImageUrls = await Promise.all(uploadPromises);
+        
+        // Parse features (comma separated)
+        const featuresText = document.getElementById('prop-features').value;
+        const features = featuresText.split(',')
+          .map(f => f.trim())
+          .filter(f => f !== '');
+          
+        const propertyPayload = {
+          title: document.getElementById('prop-title').value.trim(),
+          type: document.getElementById('prop-type').value,
+          locationKey: document.getElementById('prop-location-key').value,
+          location: document.getElementById('prop-location').value.trim(),
+          price: parseInt(document.getElementById('prop-price').value),
+          priceLabel: document.getElementById('prop-price-label').value.trim(),
+          beds: parseInt(document.getElementById('prop-beds').value || 0),
+          baths: parseInt(document.getElementById('prop-baths').value || 0),
+          sqft: parseInt(document.getElementById('prop-sqft').value),
+          sortOrder: parseInt(document.getElementById('prop-sort-order').value || 10),
+          images: finalImageUrls,
+          features: features,
+          description: document.getElementById('prop-description').value.trim(),
+          agent: {
+            name: 'Murugan Kanda',
+            role: 'Founder & Principal Consultant',
+            image: 'murugan.png'
+          }
+        };
+        
         if (docId) {
           // Edit Mode
           const docRef = doc(db, 'properties', docId);
@@ -646,7 +762,10 @@ function setupPropertyListeners() {
         fetchDashboardData();
       } catch (err) {
         console.error('Error saving property:', err);
-        alert('Error saving property data to Firestore. Verify security rules.');
+        alert('Error saving property data or uploading photos. Verify your Firebase Storage configuration & Security Rules.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
       }
     });
   }
@@ -777,6 +896,249 @@ async function seedDefaultProperties() {
       await addDoc(collection(db, "properties"), prop);
     } catch (e) {
       console.error("Error seeding property:", prop.title, e);
+    }
+  }
+}
+
+// ==========================================
+// SEARCH FILTERS MANAGEMENT
+// ==========================================
+
+async function seedDefaultLocations() {
+  const defaults = [
+    { key: "ecr", label: "ECR" },
+    { key: "adyar", label: "Adyar" },
+    { key: "omr", label: "OMR" },
+    { key: "kodaikanal", label: "Kodaikanal" },
+    { key: "coimbatore", label: "Coimbatore" }
+  ];
+  for (const item of defaults) {
+    await addDoc(collection(db, "locations"), item);
+  }
+}
+
+async function seedDefaultTypes() {
+  const defaults = [
+    { key: "villa", label: "Villa" },
+    { key: "apartment", label: "Apartment" },
+    { key: "commercial", label: "Commercial" },
+    { key: "land", label: "Premium Land" }
+  ];
+  for (const item of defaults) {
+    await addDoc(collection(db, "types"), item);
+  }
+}
+
+async function seedDefaultBudgets() {
+  const defaults = [
+    { value: 10000000, label: "₹1.00 Crore" },
+    { value: 20000000, label: "₹2.00 Crores" },
+    { value: 30000000, label: "₹3.00 Crores" },
+    { value: 50000000, label: "₹5.00 Crores" },
+    { value: 100000000, label: "₹10.00 Crores" }
+  ];
+  for (const item of defaults) {
+    await addDoc(collection(db, "budgets"), item);
+  }
+}
+
+function renderFiltersLists() {
+  renderLocationsList();
+  renderTypesList();
+  renderBudgetsList();
+}
+
+function renderLocationsList() {
+  const listContainer = document.getElementById("locations-list");
+  if (!listContainer) return;
+  listContainer.innerHTML = "";
+  
+  const items = databaseData.locations || [];
+  if (items.length === 0) {
+    listContainer.innerHTML = '<div class="no-data">No locations configured.</div>';
+    return;
+  }
+  
+  items.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "filter-item-row";
+    row.innerHTML = `
+      <div class="filter-item-info">
+        <span class="filter-item-label">${escapeHtml(item.label)}</span>
+        <span class="filter-item-key">Key: ${escapeHtml(item.key)}</span>
+      </div>
+      <button class="action-btn action-delete-btn" onclick="deleteFilterItem('locations', '${item.id}')" title="Delete Location">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    `;
+    listContainer.appendChild(row);
+  });
+}
+
+function renderTypesList() {
+  const listContainer = document.getElementById("types-list");
+  if (!listContainer) return;
+  listContainer.innerHTML = "";
+  
+  const items = databaseData.types || [];
+  if (items.length === 0) {
+    listContainer.innerHTML = '<div class="no-data">No types configured.</div>';
+    return;
+  }
+  
+  items.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "filter-item-row";
+    row.innerHTML = `
+      <div class="filter-item-info">
+        <span class="filter-item-label">${escapeHtml(item.label)}</span>
+        <span class="filter-item-key">Key: ${escapeHtml(item.key)}</span>
+      </div>
+      <button class="action-btn action-delete-btn" onclick="deleteFilterItem('types', '${item.id}')" title="Delete Type">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    `;
+    listContainer.appendChild(row);
+  });
+}
+
+function renderBudgetsList() {
+  const listContainer = document.getElementById("budgets-list");
+  if (!listContainer) return;
+  listContainer.innerHTML = "";
+  
+  const items = databaseData.budgets || [];
+  if (items.length === 0) {
+    listContainer.innerHTML = '<div class="no-data">No budgets configured.</div>';
+    return;
+  }
+  
+  items.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "filter-item-row";
+    row.innerHTML = `
+      <div class="filter-item-info">
+        <span class="filter-item-label">${escapeHtml(item.label)}</span>
+        <span class="filter-item-key">Value: ${item.value}</span>
+      </div>
+      <button class="action-btn action-delete-btn" onclick="deleteFilterItem('budgets', '${item.id}')" title="Delete Budget">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    `;
+    listContainer.appendChild(row);
+  });
+}
+
+window.deleteFilterItem = async function(collectionName, id) {
+  if (!confirm(`Are you sure you want to delete this option permanently?`)) {
+    return;
+  }
+  try {
+    const docRef = doc(db, collectionName, id);
+    await deleteDoc(docRef);
+    fetchDashboardData();
+  } catch (err) {
+    console.error("Error deleting filter option:", err);
+    alert("Failed to delete option.");
+  }
+};
+
+function setupFilterManagementListeners() {
+  const addLocationForm = document.getElementById("add-location-form");
+  const addTypeForm = document.getElementById("add-type-form");
+  const addBudgetForm = document.getElementById("add-budget-form");
+
+  if (addLocationForm) {
+    addLocationForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const labelInput = document.getElementById("new-loc-label");
+      const keyInput = document.getElementById("new-loc-key");
+      const label = labelInput.value.trim();
+      const key = keyInput.value.trim().toLowerCase();
+
+      try {
+        await addDoc(collection(db, "locations"), { label, key });
+        addLocationForm.reset();
+        fetchDashboardData();
+      } catch (err) {
+        console.error("Error adding location:", err);
+        alert("Failed to add location.");
+      }
+    });
+  }
+
+  if (addTypeForm) {
+    addTypeForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const labelInput = document.getElementById("new-type-label");
+      const keyInput = document.getElementById("new-type-key");
+      const label = labelInput.value.trim();
+      const key = keyInput.value.trim().toLowerCase();
+
+      try {
+        await addDoc(collection(db, "types"), { label, key });
+        addTypeForm.reset();
+        fetchDashboardData();
+      } catch (err) {
+        console.error("Error adding type:", err);
+        alert("Failed to add type.");
+      }
+    });
+  }
+
+  if (addBudgetForm) {
+    addBudgetForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const labelInput = document.getElementById("new-budget-label");
+      const valueInput = document.getElementById("new-budget-value");
+      const label = labelInput.value.trim();
+      const value = parseInt(valueInput.value);
+
+      try {
+        await addDoc(collection(db, "budgets"), { label, value });
+        addBudgetForm.reset();
+        fetchDashboardData();
+      } catch (err) {
+        console.error("Error adding budget:", err);
+        alert("Failed to add budget.");
+      }
+    });
+  }
+}
+
+function populatePropertyFormSelects() {
+  const propTypeSelect = document.getElementById("prop-type");
+  const propLocationSelect = document.getElementById("prop-location-key");
+  
+  if (propTypeSelect) {
+    const currentVal = propTypeSelect.value;
+    
+    propTypeSelect.innerHTML = `<option value="" disabled selected>Select Type</option>`;
+    databaseData.types.forEach(type => {
+      const opt = document.createElement("option");
+      opt.value = type.key;
+      opt.textContent = type.label;
+      propTypeSelect.appendChild(opt);
+    });
+    
+    if (currentVal && databaseData.types.some(t => t.key === currentVal)) {
+      propTypeSelect.value = currentVal;
+    }
+  }
+  
+  if (propLocationSelect) {
+    const currentVal = propLocationSelect.value;
+    
+    propLocationSelect.innerHTML = `<option value="" disabled selected>Select Location</option>`;
+    databaseData.locations.forEach(loc => {
+      const opt = document.createElement("option");
+      opt.value = loc.key;
+      opt.textContent = loc.label;
+      propLocationSelect.appendChild(opt);
+    });
+    
+    if (currentVal && databaseData.locations.some(l => l.key === currentVal)) {
+      propLocationSelect.value = currentVal;
     }
   }
 }

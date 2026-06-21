@@ -177,6 +177,9 @@ async function initApp() {
   
   activeProperties = await fetchPropertiesFromFirestore();
   
+  const filters = await fetchFiltersFromFirestore();
+  populateFrontendFilters(filters);
+  
   renderPropertiesList(activeProperties);
   initPropertyFilters();
   initFAQAccordion();
@@ -1185,6 +1188,96 @@ function initMagneticElements() {
       btn.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
     });
   });
+}
+
+// ==========================================
+// DYNAMIC FRONTEND SEARCH FILTERS
+// ==========================================
+
+const fallbackLocations = [
+  { key: "ecr", label: "ECR" },
+  { key: "adyar", label: "Adyar" },
+  { key: "omr", label: "OMR" },
+  { key: "kodaikanal", label: "Kodaikanal" },
+  { key: "coimbatore", label: "Coimbatore" }
+];
+
+const fallbackTypes = [
+  { key: "villa", label: "Villa" },
+  { key: "apartment", label: "Apartment" },
+  { key: "commercial", label: "Commercial" },
+  { key: "land", label: "Premium Land" }
+];
+
+const fallbackBudgets = [
+  { value: 10000000, label: "₹1.00 Crore" },
+  { value: 20000000, label: "₹2.00 Crores" },
+  { value: 30000000, label: "₹3.00 Crores" },
+  { value: 50000000, label: "₹5.00 Crores" },
+  { value: 100000000, label: "₹10.00 Crores" }
+];
+
+async function fetchFiltersFromFirestore() {
+  try {
+    const locQuery = query(collection(db, "locations"), orderBy("label", "asc"));
+    const typeQuery = query(collection(db, "types"), orderBy("label", "asc"));
+    const budgetQuery = query(collection(db, "budgets"), orderBy("value", "asc"));
+
+    const [locsSnap, typesSnap, budgetsSnap] = await Promise.all([
+      getDocs(locQuery).catch(err => { console.warn("Failed fetching locations:", err); return { docs: [] }; }),
+      getDocs(typeQuery).catch(err => { console.warn("Failed fetching types:", err); return { docs: [] }; }),
+      getDocs(budgetQuery).catch(err => { console.warn("Failed fetching budgets:", err); return { docs: [] }; })
+    ]);
+
+    const locations = locsSnap.docs.map(doc => doc.data());
+    const types = typesSnap.docs.map(doc => doc.data());
+    const budgets = budgetsSnap.docs.map(doc => doc.data());
+
+    return { locations, types, budgets };
+  } catch (error) {
+    console.error("Error loading filters from Firestore:", error);
+    return { locations: [], types: [], budgets: [] };
+  }
+}
+
+function populateFrontendFilters(filters) {
+  const filterLoc = document.getElementById("filter-location");
+  const filterType = document.getElementById("filter-type");
+  const filterPrice = document.getElementById("filter-price");
+
+  const locations = filters.locations && filters.locations.length > 0 ? filters.locations : fallbackLocations;
+  const types = filters.types && filters.types.length > 0 ? filters.types : fallbackTypes;
+  const budgets = filters.budgets && filters.budgets.length > 0 ? filters.budgets : fallbackBudgets;
+
+  if (filterLoc) {
+    filterLoc.innerHTML = `<option value="all">All Locations</option>`;
+    locations.forEach(loc => {
+      const opt = document.createElement("option");
+      opt.value = loc.key;
+      opt.textContent = loc.label;
+      filterLoc.appendChild(opt);
+    });
+  }
+
+  if (filterType) {
+    filterType.innerHTML = `<option value="all">All Types</option>`;
+    types.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.key;
+      opt.textContent = t.label;
+      filterType.appendChild(opt);
+    });
+  }
+
+  if (filterPrice) {
+    filterPrice.innerHTML = `<option value="all">Any Budget</option>`;
+    budgets.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.value;
+      opt.textContent = b.label;
+      filterPrice.appendChild(opt);
+    });
+  }
 }
 
 
