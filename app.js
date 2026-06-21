@@ -1,3 +1,6 @@
+import { db } from "./firebase-config.js";
+import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 // properties-data.js (inlined for zero configuration build)
 const propertiesData = [
   {
@@ -505,10 +508,31 @@ function initContactForm() {
       });
 
       if (isValid) {
-        // Hide form & show glassmorphic feedback block on success
-        form.style.display = "none";
-        successFeedback.style.display = "block";
-        successFeedback.scrollIntoView({ behavior: "smooth", block: "center" });
+        const nameVal = document.getElementById("form-name").value;
+        const emailVal = document.getElementById("form-email").value;
+        const phoneVal = document.getElementById("form-phone").value;
+        const interestVal = document.getElementById("form-interest").value;
+        const messageVal = document.getElementById("form-message").value;
+
+        addDoc(collection(db, "inquiries"), {
+          name: nameVal,
+          email: emailVal,
+          phone: phoneVal,
+          interest: interestVal,
+          message: messageVal,
+          status: "Pending",
+          created_at: new Date().toISOString()
+        })
+        .then(() => {
+          // Hide form & show glassmorphic feedback block on success
+          form.style.display = "none";
+          successFeedback.style.display = "block";
+          successFeedback.scrollIntoView({ behavior: "smooth", block: "center" });
+        })
+        .catch(err => {
+          console.error("Firestore inquiry error:", err);
+          alert("Something went wrong. Please try again.");
+        });
       }
     });
   }
@@ -523,11 +547,43 @@ function initContactForm() {
       const email = document.getElementById("newsletter-email");
       if (!email) return;
       if (validateEmail(email.value)) {
-        newsletterFeedback.className = "newsletter-feedback success";
-        email.value = "";
-        setTimeout(() => {
-          newsletterFeedback.className = "newsletter-feedback";
-        }, 5000);
+        const emailVal = email.value;
+        const emailLower = emailVal.trim().toLowerCase();
+        
+        // Query to check for existing email
+        const newsletterQuery = query(collection(db, "newsletter"), where("email", "==", emailLower));
+        getDocs(newsletterQuery)
+        .then(querySnapshot => {
+          if (!querySnapshot.empty) {
+            newsletterFeedback.className = "newsletter-feedback success";
+            newsletterFeedback.textContent = "Already subscribed!";
+            email.value = "";
+            setTimeout(() => {
+              newsletterFeedback.className = "newsletter-feedback";
+            }, 5000);
+          } else {
+            addDoc(collection(db, "newsletter"), {
+              email: emailLower,
+              created_at: new Date().toISOString()
+            })
+            .then(() => {
+              newsletterFeedback.className = "newsletter-feedback success";
+              newsletterFeedback.textContent = "Subscribed successfully!";
+              email.value = "";
+              setTimeout(() => {
+                newsletterFeedback.className = "newsletter-feedback";
+              }, 5000);
+            })
+            .catch(err => {
+              console.error("Firestore newsletter error:", err);
+              email.style.borderColor = "var(--red)";
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Firestore query error:", err);
+          email.style.borderColor = "var(--red)";
+        });
       } else {
         email.style.borderColor = "var(--red)";
         email.addEventListener("input", () => {
@@ -611,14 +667,28 @@ function initModalListeners() {
     e.preventDefault();
     const name = document.getElementById("modal-form-name");
     const phone = document.getElementById("modal-form-phone");
+    const propertyTitle = currentModalProperty ? currentModalProperty.title : null;
 
     if (name.value.trim() !== "" && phone.value.trim() !== "") {
-      agentForm.innerHTML = `
-        <div style="text-align: center; color: var(--gold-primary); font-family: var(--font-headings); font-weight: 600; padding: 10px 0;">
-          <i class="fa-solid fa-circle-check" style="font-size: 1.5rem; display: block; margin-bottom: 6px;"></i>
-          Callback Scheduled!
-        </div>
-      `;
+      addDoc(collection(db, "callbacks"), {
+        name: name.value,
+        phone: phone.value,
+        property_title: propertyTitle,
+        status: "Pending",
+        created_at: new Date().toISOString()
+      })
+      .then(() => {
+        agentForm.innerHTML = `
+          <div style="text-align: center; color: var(--gold-primary); font-family: var(--font-headings); font-weight: 600; padding: 10px 0;">
+            <i class="fa-solid fa-circle-check" style="font-size: 1.5rem; display: block; margin-bottom: 6px;"></i>
+            Callback Scheduled!
+          </div>
+        `;
+      })
+      .catch(err => {
+        console.error("Firestore callback error:", err);
+        alert("Failed to schedule callback. Please try again.");
+      });
     }
   });
 }
