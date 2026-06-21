@@ -7,7 +7,9 @@ import {
   deleteDoc, 
   query, 
   orderBy,
-  addDoc 
+  addDoc,
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { 
   signInWithEmailAndPassword, 
@@ -143,68 +145,79 @@ async function fetchDashboardData() {
     const inquiriesQuery = query(collection(db, "inquiries"), orderBy("created_at", "desc"));
     const callbacksQuery = query(collection(db, "callbacks"), orderBy("created_at", "desc"));
     const propertiesQuery = query(collection(db, "properties"), orderBy("sortOrder", "asc"));
-    const locationsQuery = query(collection(db, "locations"), orderBy("label", "asc"));
-    const typesQuery = query(collection(db, "types"), orderBy("label", "asc"));
-    const budgetsQuery = query(collection(db, "budgets"), orderBy("value", "asc"));
 
     // Gracefully catch errors for each collection fetch so security rules issues don't crash dashboard
-    const [newsletterSnap, inquiriesSnap, callbacksSnap, propertiesSnap, locationsSnap, typesSnap, budgetsSnap] = await Promise.all([
+    const [newsletterSnap, inquiriesSnap, callbacksSnap, propertiesSnap] = await Promise.all([
       getDocs(newsletterQuery).catch(err => { console.warn("Failed to fetch newsletter:", err); return { docs: [] }; }),
       getDocs(inquiriesQuery).catch(err => { console.warn("Failed to fetch inquiries:", err); return { docs: [] }; }),
       getDocs(callbacksQuery).catch(err => { console.warn("Failed to fetch callbacks:", err); return { docs: [] }; }),
-      getDocs(propertiesQuery).catch(err => { console.warn("Failed to fetch properties:", err); return { docs: [] }; }),
-      getDocs(locationsQuery).catch(err => { console.warn("Failed to fetch locations:", err); return { docs: [] }; }),
-      getDocs(typesQuery).catch(err => { console.warn("Failed to fetch types:", err); return { docs: [] }; }),
-      getDocs(budgetsQuery).catch(err => { console.warn("Failed to fetch budgets:", err); return { docs: [] }; })
+      getDocs(propertiesQuery).catch(err => { console.warn("Failed to fetch properties:", err); return { docs: [] }; })
     ]);
     
     // Map documents to state arrays safely
     databaseData.newsletter = (newsletterSnap && newsletterSnap.docs) ? newsletterSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
     databaseData.inquiries = (inquiriesSnap && inquiriesSnap.docs) ? inquiriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
     databaseData.callbacks = (callbacksSnap && callbacksSnap.docs) ? callbacksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
-    databaseData.properties = (propertiesSnap && propertiesSnap.docs) ? propertiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+    databaseData.properties = (propertiesSnap && propertiesSnap.docs) 
+      ? propertiesSnap.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(p => p.id !== "--filters-config--")
+      : [];
 
-    // Fetch local fallback custom filters
-    let localLocs = localStorage.getItem(LS_LOCATIONS_KEY);
-    let localTypes = localStorage.getItem(LS_TYPES_KEY);
-    let localBudgets = localStorage.getItem(LS_BUDGETS_KEY);
+    // Fetch shared filters config doc from properties collection
+    const filtersDocRef = doc(db, "properties", "--filters-config--");
+    const filtersDocSnap = await getDoc(filtersDocRef).catch(err => {
+      console.warn("Failed to fetch shared filters config doc:", err);
+      return null;
+    });
 
-    // Initialize LocalStorage with default fallbacks if empty
-    if (!localLocs) {
-      const defaultLocs = fallbackLocations.map((item, idx) => ({ id: `local-loc-${idx}`, ...item }));
-      localStorage.setItem(LS_LOCATIONS_KEY, JSON.stringify(defaultLocs));
-      localLocs = JSON.stringify(defaultLocs);
-    }
-    if (!localTypes) {
-      const defaultTypes = fallbackTypes.map((item, idx) => ({ id: `local-type-${idx}`, ...item }));
-      localStorage.setItem(LS_TYPES_KEY, JSON.stringify(defaultTypes));
-      localTypes = JSON.stringify(defaultTypes);
-    }
-    if (!localBudgets) {
-      const defaultBudgets = fallbackBudgets.map((item, idx) => ({ id: `local-budget-${idx}`, ...item }));
-      localStorage.setItem(LS_BUDGETS_KEY, JSON.stringify(defaultBudgets));
-      localBudgets = JSON.stringify(defaultBudgets);
+    let filtersData = null;
+    if (filtersDocSnap && filtersDocSnap.exists()) {
+      filtersData = filtersDocSnap.data();
     }
 
-    // Load locations
-    if (locationsSnap.docs.length > 0) {
-      databaseData.locations = locationsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (filtersData) {
+      databaseData.locations = filtersData.locations || [];
+      databaseData.types = filtersData.types || [];
+      databaseData.budgets = filtersData.budgets || [];
+      // Mirror to LocalStorage
+      localStorage.setItem(LS_LOCATIONS_KEY, JSON.stringify(databaseData.locations));
+      localStorage.setItem(LS_TYPES_KEY, JSON.stringify(databaseData.types));
+      localStorage.setItem(LS_BUDGETS_KEY, JSON.stringify(databaseData.budgets));
     } else {
+      // Fallback to local storage if config document is missing / failed
+      let localLocs = localStorage.getItem(LS_LOCATIONS_KEY);
+      let localTypes = localStorage.getItem(LS_TYPES_KEY);
+      let localBudgets = localStorage.getItem(LS_BUDGETS_KEY);
+
+      if (!localLocs) {
+        const defaultLocs = fallbackLocations.map((item, idx) => ({ id: `local-loc-${idx}`, ...item }));
+        localStorage.setItem(LS_LOCATIONS_KEY, JSON.stringify(defaultLocs));
+        localLocs = JSON.stringify(defaultLocs);
+      }
+      if (!localTypes) {
+        const defaultTypes = fallbackTypes.map((item, idx) => ({ id: `local-type-${idx}`, ...item }));
+        localStorage.setItem(LS_TYPES_KEY, JSON.stringify(defaultTypes));
+        localTypes = JSON.stringify(defaultTypes);
+      }
+      if (!localBudgets) {
+        const defaultBudgets = fallbackBudgets.map((item, idx) => ({ id: `local-budget-${idx}`, ...item }));
+        localStorage.setItem(LS_BUDGETS_KEY, JSON.stringify(defaultBudgets));
+        localBudgets = JSON.stringify(defaultBudgets);
+      }
+
       databaseData.locations = JSON.parse(localLocs);
-    }
-
-    // Load types
-    if (typesSnap.docs.length > 0) {
-      databaseData.types = typesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } else {
       databaseData.types = JSON.parse(localTypes);
-    }
-
-    // Load budgets
-    if (budgetsSnap.docs.length > 0) {
-      databaseData.budgets = budgetsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } else {
       databaseData.budgets = JSON.parse(localBudgets);
+
+      // Attempt to initialize / save to Firestore properties collection so it is shared
+      const seedPayload = {
+        isFiltersConfig: true,
+        locations: databaseData.locations,
+        types: databaseData.types,
+        budgets: databaseData.budgets
+      };
+      await setDoc(filtersDocRef, seedPayload).catch(err => console.warn("Failed to seed shared filters doc:", err));
     }
 
     // Seed default properties if database is empty (and we didn't fail to fetch)
@@ -212,7 +225,7 @@ async function fetchDashboardData() {
       console.log("No properties found in Firestore. Seeding default properties...");
       await seedDefaultProperties().catch(err => console.error("Error seeding properties:", err));
       const freshSnap = await getDocs(propertiesQuery).catch(() => ({ docs: [] }));
-      databaseData.properties = freshSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      databaseData.properties = freshSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(p => p.id !== "--filters-config--");
     }
     
     // Aggregate statistics
@@ -228,7 +241,7 @@ async function fetchDashboardData() {
     renderTables();
   } catch (err) {
     console.error('Error fetching Firestore data:', err);
-    alert('Failed to retrieve database entries. Error: ' + (err ? err.message : '') + '\nVerify your Firestore Security Rules allow read access.');
+    showToast("Failed to fetch database entries.", "error");
   }
 }
 
@@ -400,32 +413,28 @@ window.updateLeadStatus = async function(type, id, currentStatus) {
     fetchDashboardData();
   } catch (err) {
     console.error('Error updating Firestore status:', err);
-    alert('Failed to update status.');
+    showToast('Failed to update status.', 'error');
   }
 };
 
 window.deleteLead = async function(type, id) {
-  if (!confirm(`Are you sure you want to delete this ${type} record permanently?`)) {
-    return;
-  }
+  showConfirm(`Are you sure you want to delete this ${type} record permanently?`, async () => {
+    let table = '';
+    if (type === 'newsletter') table = 'newsletter';
+    else if (type === 'inquiry') table = 'inquiries';
+    else if (type === 'callback') table = 'callbacks';
+    else return;
 
-  let table = '';
-  if (type === 'newsletter') table = 'newsletter';
-  else if (type === 'inquiry') table = 'inquiries';
-  else if (type === 'callback') table = 'callbacks';
-  else return;
-
-  try {
-    // Delete document in Firestore
-    const docRef = doc(db, table, id);
-    await deleteDoc(docRef);
-    
-    // Refresh local list
-    fetchDashboardData();
-  } catch (err) {
-    console.error('Error deleting Firestore record:', err);
-    alert('Failed to delete record.');
-  }
+    try {
+      const docRef = doc(db, table, id);
+      await deleteDoc(docRef);
+      showToast("Record deleted successfully!");
+      fetchDashboardData();
+    } catch (err) {
+      console.error('Error deleting Firestore record:', err);
+      showToast("Failed to delete record.", "error");
+    }
+  });
 };
 
 // ==========================================
@@ -503,7 +512,7 @@ function setupExportListeners() {
 function exportToCsv(dataType, headers) {
   const dataList = databaseData[dataType] || [];
   if (dataList.length === 0) {
-    alert('No data to export.');
+    showToast('No data to export.', 'error');
     return;
   }
   
@@ -619,18 +628,17 @@ window.openEditPropertyModal = function(id) {
 };
 
 window.deleteProperty = async function(id) {
-  if (!confirm('Are you sure you want to delete this property permanently?')) {
-    return;
-  }
-  
-  try {
-    const docRef = doc(db, 'properties', id);
-    await deleteDoc(docRef);
-    fetchDashboardData();
-  } catch (err) {
-    console.error('Error deleting property:', err);
-    alert('Failed to delete property.');
-  }
+  showConfirm('Are you sure you want to delete this property permanently?', async () => {
+    try {
+      const docRef = doc(db, 'properties', id);
+      await deleteDoc(docRef);
+      showToast("Property deleted successfully!");
+      fetchDashboardData();
+    } catch (err) {
+      console.error('Error deleting property:', err);
+      showToast("Failed to delete property.", "error");
+    }
+  });
 };
 
 function renderFormImagesPreview() {
@@ -719,7 +727,7 @@ function setupPropertyListeners() {
       e.preventDefault();
       
       if (propertyFormImages.length === 0) {
-        alert('Please choose at least one photo for the property.');
+        showToast('Please choose at least one photo for the property.', "error");
         return;
       }
       
@@ -784,11 +792,12 @@ function setupPropertyListeners() {
           console.log("Property created successfully!");
         }
         
+        showToast(docId ? "Property updated successfully!" : "Property created successfully!");
         closeModal();
         fetchDashboardData();
       } catch (err) {
         console.error('Error saving property:', err);
-        alert('Error saving property data or uploading photos. Verify your Firebase Storage configuration & Security Rules.');
+        showToast("Error saving property data or uploading photos.", "error");
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnHtml;
@@ -930,44 +939,6 @@ async function seedDefaultProperties() {
 // SEARCH FILTERS MANAGEMENT
 // ==========================================
 
-async function seedDefaultLocations() {
-  const defaults = [
-    { key: "ecr", label: "ECR" },
-    { key: "adyar", label: "Adyar" },
-    { key: "omr", label: "OMR" },
-    { key: "kodaikanal", label: "Kodaikanal" },
-    { key: "coimbatore", label: "Coimbatore" }
-  ];
-  for (const item of defaults) {
-    await addDoc(collection(db, "locations"), item);
-  }
-}
-
-async function seedDefaultTypes() {
-  const defaults = [
-    { key: "villa", label: "Villa" },
-    { key: "apartment", label: "Apartment" },
-    { key: "commercial", label: "Commercial" },
-    { key: "land", label: "Premium Land" }
-  ];
-  for (const item of defaults) {
-    await addDoc(collection(db, "types"), item);
-  }
-}
-
-async function seedDefaultBudgets() {
-  const defaults = [
-    { value: 10000000, label: "₹1.00 Crore" },
-    { value: 20000000, label: "₹2.00 Crores" },
-    { value: 30000000, label: "₹3.00 Crores" },
-    { value: 50000000, label: "₹5.00 Crores" },
-    { value: 100000000, label: "₹10.00 Crores" }
-  ];
-  for (const item of defaults) {
-    await addDoc(collection(db, "budgets"), item);
-  }
-}
-
 function renderFiltersLists() {
   renderLocationsList();
   renderTypesList();
@@ -1056,44 +1027,20 @@ function renderBudgetsList() {
 }
 
 window.deleteFilterItem = async function(collectionName, id) {
-  if (!confirm(`Are you sure you want to delete this option permanently?`)) {
-    return;
-  }
-  
-  if (id.startsWith('local-')) {
-    let lsKey = '';
-    if (collectionName === 'locations') lsKey = LS_LOCATIONS_KEY;
-    else if (collectionName === 'types') lsKey = LS_TYPES_KEY;
-    else if (collectionName === 'budgets') lsKey = LS_BUDGETS_KEY;
-    
-    if (lsKey) {
-      const items = JSON.parse(localStorage.getItem(lsKey) || '[]');
-      const filtered = items.filter(item => item.id !== id);
-      localStorage.setItem(lsKey, JSON.stringify(filtered));
-      fetchDashboardData();
-      return;
+  showConfirm(`Are you sure you want to delete this option permanently?`, async () => {
+    // Delete option
+    if (collectionName === 'locations') {
+      databaseData.locations = databaseData.locations.filter(item => item.id !== id && item.key !== id);
+    } else if (collectionName === 'types') {
+      databaseData.types = databaseData.types.filter(item => item.id !== id && item.key !== id);
+    } else if (collectionName === 'budgets') {
+      databaseData.budgets = databaseData.budgets.filter(item => item.id !== id && item.value !== id && item.value !== parseInt(id));
     }
-  }
 
-  try {
-    const docRef = doc(db, collectionName, id);
-    await deleteDoc(docRef);
+    await saveFiltersToDatabase();
     fetchDashboardData();
-  } catch (err) {
-    console.warn("Firestore delete blocked. Deleting from local browser storage:", err);
-    let lsKey = '';
-    if (collectionName === 'locations') lsKey = LS_LOCATIONS_KEY;
-    else if (collectionName === 'types') lsKey = LS_TYPES_KEY;
-    else if (collectionName === 'budgets') lsKey = LS_BUDGETS_KEY;
-    
-    if (lsKey) {
-      const items = JSON.parse(localStorage.getItem(lsKey) || '[]');
-      const filtered = items.filter(item => item.id !== id);
-      localStorage.setItem(lsKey, JSON.stringify(filtered));
-      fetchDashboardData();
-      alert("Deleted from local browser storage (Firestore delete rules blocked server saving).");
-    }
-  }
+    showToast("Option deleted successfully!");
+  });
 };
 
 function setupFilterManagementListeners() {
@@ -1109,19 +1056,13 @@ function setupFilterManagementListeners() {
       const label = labelInput.value.trim();
       const key = keyInput.value.trim().toLowerCase();
 
-      try {
-        await addDoc(collection(db, "locations"), { label, key });
-        addLocationForm.reset();
-        fetchDashboardData();
-      } catch (err) {
-        console.warn("Firestore write blocked. Saving to local browser storage:", err);
-        const currentLocs = JSON.parse(localStorage.getItem(LS_LOCATIONS_KEY) || '[]');
-        currentLocs.push({ id: `local-loc-${Date.now()}`, label, key });
-        localStorage.setItem(LS_LOCATIONS_KEY, JSON.stringify(currentLocs));
-        addLocationForm.reset();
-        fetchDashboardData();
-        alert("Saved to local browser storage (Firestore write rules blocked server saving).");
-      }
+      const newLoc = { id: `local-loc-${Date.now()}`, label, key };
+      databaseData.locations.push(newLoc);
+      
+      addLocationForm.reset();
+      await saveFiltersToDatabase();
+      fetchDashboardData();
+      showToast("Location added successfully!");
     });
   }
 
@@ -1133,19 +1074,13 @@ function setupFilterManagementListeners() {
       const label = labelInput.value.trim();
       const key = keyInput.value.trim().toLowerCase();
 
-      try {
-        await addDoc(collection(db, "types"), { label, key });
-        addTypeForm.reset();
-        fetchDashboardData();
-      } catch (err) {
-        console.warn("Firestore write blocked. Saving to local browser storage:", err);
-        const currentTypes = JSON.parse(localStorage.getItem(LS_TYPES_KEY) || '[]');
-        currentTypes.push({ id: `local-type-${Date.now()}`, label, key });
-        localStorage.setItem(LS_TYPES_KEY, JSON.stringify(currentTypes));
-        addTypeForm.reset();
-        fetchDashboardData();
-        alert("Saved to local browser storage (Firestore write rules blocked server saving).");
-      }
+      const newType = { id: `local-type-${Date.now()}`, label, key };
+      databaseData.types.push(newType);
+      
+      addTypeForm.reset();
+      await saveFiltersToDatabase();
+      fetchDashboardData();
+      showToast("Property type added successfully!");
     });
   }
 
@@ -1157,19 +1092,13 @@ function setupFilterManagementListeners() {
       const label = labelInput.value.trim();
       const value = parseInt(valueInput.value);
 
-      try {
-        await addDoc(collection(db, "budgets"), { label, value });
-        addBudgetForm.reset();
-        fetchDashboardData();
-      } catch (err) {
-        console.warn("Firestore write blocked. Saving to local browser storage:", err);
-        const currentBudgets = JSON.parse(localStorage.getItem(LS_BUDGETS_KEY) || '[]');
-        currentBudgets.push({ id: `local-budget-${Date.now()}`, label, value });
-        localStorage.setItem(LS_BUDGETS_KEY, JSON.stringify(currentBudgets));
-        addBudgetForm.reset();
-        fetchDashboardData();
-        alert("Saved to local browser storage (Firestore write rules blocked server saving).");
-      }
+      const newBudget = { id: `local-budget-${Date.now()}`, label, value };
+      databaseData.budgets.push(newBudget);
+      
+      addBudgetForm.reset();
+      await saveFiltersToDatabase();
+      fetchDashboardData();
+      showToast("Budget option added successfully!");
     });
   }
 }
@@ -1210,3 +1139,87 @@ function populatePropertyFormSelects() {
     }
   }
 }
+
+async function saveFiltersToDatabase() {
+  try {
+    const filtersDocRef = doc(db, "properties", "--filters-config--");
+    const payload = {
+      isFiltersConfig: true,
+      locations: databaseData.locations,
+      types: databaseData.types,
+      budgets: databaseData.budgets
+    };
+    await setDoc(filtersDocRef, payload);
+    // Mirror to LocalStorage
+    localStorage.setItem(LS_LOCATIONS_KEY, JSON.stringify(databaseData.locations));
+    localStorage.setItem(LS_TYPES_KEY, JSON.stringify(databaseData.types));
+    localStorage.setItem(LS_BUDGETS_KEY, JSON.stringify(databaseData.budgets));
+    console.log("Successfully saved filters config to shared database.");
+  } catch (err) {
+    console.warn("Firestore write blocked. Saving to local browser storage only:", err);
+    localStorage.setItem(LS_LOCATIONS_KEY, JSON.stringify(databaseData.locations));
+    localStorage.setItem(LS_TYPES_KEY, JSON.stringify(databaseData.types));
+    localStorage.setItem(LS_BUDGETS_KEY, JSON.stringify(databaseData.budgets));
+    showToast("Saved locally (Firestore database rules blocked server saving).", "error");
+  }
+}
+
+// Custom Toast/Notification Function
+window.showToast = function(message, type = 'success') {
+  const toast = document.getElementById('custom-toast');
+  const msgEl = document.getElementById('custom-toast-message');
+  const iconEl = document.getElementById('custom-toast-icon');
+  
+  if (!toast || !msgEl || !iconEl) return;
+  
+  msgEl.textContent = message;
+  if (type === 'error') {
+    toast.style.borderLeftColor = '#e74c3c';
+    iconEl.className = 'fa-solid fa-circle-exclamation';
+    iconEl.style.color = '#e74c3c';
+  } else {
+    toast.style.borderLeftColor = '#539e40';
+    iconEl.className = 'fa-solid fa-circle-check';
+    iconEl.style.color = '#539e40';
+  }
+  
+  toast.style.transform = 'translateY(0)';
+  toast.style.opacity = '1';
+  
+  setTimeout(() => {
+    toast.style.transform = 'translateY(100px)';
+    toast.style.opacity = '0';
+  }, 4000);
+};
+
+// Custom Confirm Modal Dialog Function
+window.showConfirm = function(message, onConfirm) {
+  const modal = document.getElementById('custom-confirm-modal');
+  const msgEl = document.getElementById('custom-confirm-message');
+  const okBtn = document.getElementById('custom-confirm-ok');
+  const cancelBtn = document.getElementById('custom-confirm-cancel');
+  
+  if (!modal || !msgEl || !okBtn || !cancelBtn) {
+    if (confirm(message)) onConfirm();
+    return;
+  }
+  
+  msgEl.textContent = message;
+  modal.classList.add('active');
+  
+  const cleanup = () => {
+    modal.classList.remove('active');
+    // Remove event listeners by replacing buttons with clones
+    okBtn.replaceWith(okBtn.cloneNode(true));
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+  };
+  
+  document.getElementById('custom-confirm-ok').addEventListener('click', () => {
+    cleanup();
+    onConfirm();
+  });
+  
+  document.getElementById('custom-confirm-cancel').addEventListener('click', () => {
+    cleanup();
+  });
+};

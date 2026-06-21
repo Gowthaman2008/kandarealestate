@@ -17,9 +17,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   
   <!-- Local Stylesheet -->
-  <script type="module" crossorigin src="/assets/main-CNQn9mp9.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-C-6acxfH.js">
-  <link rel="stylesheet" crossorigin href="/assets/firebase-config-DpBmsrqt.css">
+  <script type="module" crossorigin src="/assets/main-Cb5NyI6I.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-D6DPe9jK.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-BjEEqqIa.css">
 </head>
 <body>
 
@@ -816,6 +816,28 @@
   <button class="back-to-top-btn" id="back-to-top" aria-label="Back to top">
     <i class="fa-solid fa-arrow-up"></i>
   </button>
+
+  <!-- Custom Toast Notification -->
+  <div id="custom-toast" style="
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #ffffff;
+    border-left: 4px solid #539e40;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 16px 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 9999;
+  ">
+    <i id="custom-toast-icon" class="fa-solid fa-circle-check" style="color: #539e40; font-size: 1.25rem;"></i>
+    <span id="custom-toast-message" style="font-weight: 500; font-size: 0.9rem; color: #1e1e1e;"></span>
+  </div>
 
   <!-- Desktop-only Premium Custom Interactive Cursor -->
   <div class="cursor-dot" id="cursor-dot"></div>

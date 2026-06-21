@@ -1,5 +1,5 @@
 import { db } from "./firebase-config.js";
-import { collection, addDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, addDoc, query, where, getDocs, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // properties-data.js (inlined for zero configuration build)
 const propertiesData = [
@@ -156,7 +156,9 @@ async function fetchPropertiesFromFirestore() {
     const querySnapshot = await getDocs(q);
     let list = [];
     querySnapshot.forEach((doc) => {
-      list.push({ id: doc.id, ...doc.data() });
+      if (doc.id !== "--filters-config--") {
+        list.push({ id: doc.id, ...doc.data() });
+      }
     });
     
     if (list.length === 0) {
@@ -292,6 +294,46 @@ function initMobileMenu() {
 
 
 
+let slideshowIntervalId = null;
+
+function startPropertyCardsSlideshow() {
+  if (slideshowIntervalId) {
+    clearInterval(slideshowIntervalId);
+  }
+
+  slideshowIntervalId = setInterval(() => {
+    const cards = document.querySelectorAll(".property-card");
+    cards.forEach(card => {
+      const img = card.querySelector(".property-img");
+      if (!img) return;
+
+      const imagesStr = card.getAttribute("data-images");
+      if (!imagesStr) return;
+
+      try {
+        const images = JSON.parse(imagesStr);
+        if (!images || images.length <= 1) return;
+
+        let currentIndex = parseInt(card.getAttribute("data-current-image-index") || "0");
+        const nextIndex = (currentIndex + 1) % images.length;
+
+        // Fade out
+        img.style.opacity = "0";
+
+        // Wait for transition, swap source, fade back in
+        setTimeout(() => {
+          img.src = images[nextIndex];
+          card.setAttribute("data-current-image-index", nextIndex.toString());
+          img.style.opacity = "1";
+        }, 400); // matches the 0.4s transition duration
+
+      } catch (err) {
+        console.error("Error in property card slideshow:", err);
+      }
+    });
+  }, 4000); // change image every 4 seconds
+}
+
 // 4. Render property cards to HTML Grid
 function renderPropertiesList(properties) {
   const grid = document.getElementById("properties-grid");
@@ -312,6 +354,10 @@ function renderPropertiesList(properties) {
   properties.forEach(prop => {
     const card = document.createElement("div");
     card.className = "property-card";
+    
+    // Store images as data attribute for slideshow cycle
+    card.setAttribute("data-images", JSON.stringify(prop.images || []));
+    card.setAttribute("data-current-image-index", "0");
     
     // Icon selections based on type
     const typeLabel = prop.type.charAt(0).toUpperCase() + prop.type.slice(1);
@@ -339,7 +385,7 @@ function renderPropertiesList(properties) {
     card.innerHTML = `
       <div class="property-img-wrapper">
         <div class="property-badge">${typeLabel}</div>
-        <img src="${prop.images[0]}" alt="${prop.title}" class="property-img" loading="lazy">
+        <img src="${prop.images && prop.images.length > 0 ? prop.images[0] : ''}" alt="${prop.title}" class="property-img" loading="lazy" style="transition: transform var(--transition-medium), opacity 0.4s ease-in-out; opacity: 1;">
         <div class="property-price">${prop.priceLabel}</div>
       </div>
       <div class="property-body">
@@ -369,6 +415,9 @@ function renderPropertiesList(properties) {
 
   // Re-run card tilt and spotlight coordinates configuration on new elements
   initPremiumCardTilt();
+  
+  // Start dynamic slideshow for multi-image property cards
+  startPropertyCardsSlideshow();
 }
 
 // 5. Property Filtering Actions
@@ -558,7 +607,7 @@ function initContactForm() {
         })
         .catch(err => {
           console.error("Firestore inquiry error:", err);
-          alert("Something went wrong. Please try again.");
+          showToast("Something went wrong. Please try again.", "error");
         });
       }
     });
@@ -714,7 +763,7 @@ function initModalListeners() {
       })
       .catch(err => {
         console.error("Firestore callback error:", err);
-        alert("Failed to schedule callback. Please try again.");
+        showToast("Failed to schedule callback. Please try again.", "error");
       });
     }
   });
@@ -1223,21 +1272,25 @@ const fallbackBudgets = [
 
 async function fetchFiltersFromFirestore() {
   try {
-    const locQuery = query(collection(db, "locations"), orderBy("label", "asc"));
-    const typeQuery = query(collection(db, "types"), orderBy("label", "asc"));
-    const budgetQuery = query(collection(db, "budgets"), orderBy("value", "asc"));
+    const filtersDocRef = doc(db, "properties", "--filters-config--");
+    const filtersDocSnap = await getDoc(filtersDocRef).catch(err => {
+      console.warn("Failed fetching shared filters config:", err);
+      return null;
+    });
 
-    const [locsSnap, typesSnap, budgetsSnap] = await Promise.all([
-      getDocs(locQuery).catch(err => { console.warn("Failed fetching locations:", err); return { docs: [] }; }),
-      getDocs(typeQuery).catch(err => { console.warn("Failed fetching types:", err); return { docs: [] }; }),
-      getDocs(budgetQuery).catch(err => { console.warn("Failed fetching budgets:", err); return { docs: [] }; })
-    ]);
-
-    const locations = locsSnap.docs.map(doc => doc.data());
-    const types = typesSnap.docs.map(doc => doc.data());
-    const budgets = budgetsSnap.docs.map(doc => doc.data());
-
-    return { locations, types, budgets };
+    if (filtersDocSnap && filtersDocSnap.exists()) {
+      const data = filtersDocSnap.data();
+      // Mirror to local storage for offline / quick reference
+      localStorage.setItem(LS_LOCATIONS_KEY, JSON.stringify(data.locations || []));
+      localStorage.setItem(LS_TYPES_KEY, JSON.stringify(data.types || []));
+      localStorage.setItem(LS_BUDGETS_KEY, JSON.stringify(data.budgets || []));
+      return {
+        locations: data.locations || [],
+        types: data.types || [],
+        budgets: data.budgets || []
+      };
+    }
+    return { locations: [], types: [], budgets: [] };
   } catch (error) {
     console.error("Error loading filters from Firestore:", error);
     return { locations: [], types: [], budgets: [] };
@@ -1303,5 +1356,33 @@ function populateFrontendFilters(filters) {
     });
   }
 }
+
+// Custom Toast/Notification Function
+window.showToast = function(message, type = 'success') {
+  const toast = document.getElementById('custom-toast');
+  const msgEl = document.getElementById('custom-toast-message');
+  const iconEl = document.getElementById('custom-toast-icon');
+  
+  if (!toast || !msgEl || !iconEl) return;
+  
+  msgEl.textContent = message;
+  if (type === 'error') {
+    toast.style.borderLeftColor = '#e74c3c';
+    iconEl.className = 'fa-solid fa-circle-exclamation';
+    iconEl.style.color = '#e74c3c';
+  } else {
+    toast.style.borderLeftColor = '#539e40';
+    iconEl.className = 'fa-solid fa-circle-check';
+    iconEl.style.color = '#539e40';
+  }
+  
+  toast.style.transform = 'translateY(0)';
+  toast.style.opacity = '1';
+  
+  setTimeout(() => {
+    toast.style.transform = 'translateY(100px)';
+    toast.style.opacity = '0';
+  }, 4000);
+};
 
 

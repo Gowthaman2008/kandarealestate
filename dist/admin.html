@@ -864,9 +864,9 @@
       font-family: monospace;
     }
   </style>
-  <script type="module" crossorigin src="/assets/admin-NDPX-uSk.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-C-6acxfH.js">
-  <link rel="stylesheet" crossorigin href="/assets/firebase-config-DpBmsrqt.css">
+  <script type="module" crossorigin src="/assets/admin-BxN8nNDO.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-D6DPe9jK.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-BjEEqqIa.css">
 </head>
 <body class="admin-body">
 
@@ -1242,6 +1242,40 @@
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="custom-confirm-modal" class="property-modal-overlay">
+    <div class="property-modal-card" style="max-width: 400px; text-align: center;">
+      <h3 class="property-modal-title" style="border-bottom: none; margin-bottom: 10px;">Confirm Action</h3>
+      <p id="custom-confirm-message" style="color: #666; margin-bottom: 24px;"></p>
+      <div style="display: flex; justify-content: center; gap: 12px;">
+        <button id="custom-confirm-cancel" class="btn btn-outline" style="border-color: #aaa; color: #666; background: transparent; padding: 8px 16px;">Cancel</button>
+        <button id="custom-confirm-ok" class="btn btn-primary" style="background: #e74c3c; border-color: #e74c3c; padding: 8px 16px;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Toast Notification -->
+  <div id="custom-toast" style="
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #ffffff;
+    border-left: 4px solid #539e40;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 16px 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 9999;
+  ">
+    <i id="custom-toast-icon" class="fa-solid fa-circle-check" style="color: #539e40; font-size: 1.25rem;"></i>
+    <span id="custom-toast-message" style="font-weight: 500; font-size: 0.9rem; color: #1e1e1e;"></span>
   </div>
 
   <!-- Local Script File -->
