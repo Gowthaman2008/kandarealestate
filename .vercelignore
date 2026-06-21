@@ -1,0 +1,6 @@
+# Vercel Ignore
+node_modules/
+dist/
+.git/
+.gitignore
+database.sqlite
