@@ -7,11 +7,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        admin: path.resolve(__dirname, 'admin.html')
+      }
+    }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true
+      }
+    }
+  },
   plugins: [
     {
       name: 'copy-custom-assets',
       closeBundle() {
-        const files = ['app.js', 'murugan.png', 'vel.png', 'bala.png'];
+        const files = ['app.js', 'admin.js', 'firebase-config.js', 'murugan.png', 'vel.png', 'bala.png'];
         const distDir = path.resolve(__dirname, 'dist');
         
         if (!fs.existsSync(distDir)) {
