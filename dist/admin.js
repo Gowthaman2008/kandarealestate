@@ -158,11 +158,11 @@ async function fetchDashboardData() {
       getDocs(budgetsQuery).catch(err => { console.warn("Failed to fetch budgets:", err); return { docs: [] }; })
     ]);
     
-    // Map documents to state arrays
-    databaseData.newsletter = newsletterSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    databaseData.inquiries = inquiriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    databaseData.callbacks = callbacksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    databaseData.properties = propertiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Map documents to state arrays safely
+    databaseData.newsletter = (newsletterSnap && newsletterSnap.docs) ? newsletterSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+    databaseData.inquiries = (inquiriesSnap && inquiriesSnap.docs) ? inquiriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+    databaseData.callbacks = (callbacksSnap && callbacksSnap.docs) ? callbacksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+    databaseData.properties = (propertiesSnap && propertiesSnap.docs) ? propertiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
 
     // Fetch local fallback custom filters
     let localLocs = localStorage.getItem(LS_LOCATIONS_KEY);
@@ -228,7 +228,7 @@ async function fetchDashboardData() {
     renderTables();
   } catch (err) {
     console.error('Error fetching Firestore data:', err);
-    alert('Failed to retrieve database entries. Verify your Firestore Security Rules allow read access.');
+    alert('Failed to retrieve database entries. Error: ' + (err ? err.message : '') + '\nVerify your Firestore Security Rules allow read access.');
   }
 }
 
