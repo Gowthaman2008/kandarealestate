@@ -641,6 +641,49 @@ window.deleteProperty = async function(id) {
   });
 };
 
+// Helper to compress selected images and convert to Base64
+function compressAndConvertToBase64(file, maxDimension = 1200, quality = 0.7) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => {
+        resolve(event.target.result); // fallback to original file base64 on error
+      };
+    };
+    reader.onerror = () => {
+      resolve("");
+    };
+  });
+}
+
 function renderFormImagesPreview() {
   const container = document.getElementById('prop-images-preview-container');
   if (!container) return;
@@ -744,11 +787,25 @@ function setupPropertyListeners() {
           if (typeof img === 'string') {
             return img; // Already uploaded URL
           } else if (img instanceof File) {
-            // Upload local file
-            const fileRef = ref(storage, `properties/${Date.now()}_${img.name}`);
-            const snapshot = await uploadBytes(fileRef, img);
-            const downloadUrl = await getDownloadURL(snapshot.ref);
-            return downloadUrl;
+            try {
+              // Try uploading to Firebase Storage with a 4-second timeout
+              const fileRef = ref(storage, `properties/${Date.now()}_${img.name}`);
+              const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Firebase Storage upload timed out")), 4000)
+              );
+              
+              const snapshot = await Promise.race([
+                uploadBytes(fileRef, img),
+                timeoutPromise
+              ]);
+              
+              const downloadUrl = await getDownloadURL(snapshot.ref);
+              return downloadUrl;
+            } catch (storageErr) {
+              console.warn("Storage upload failed or timed out. Falling back to compressed Base64 image payload:", storageErr);
+              const compressedBase64 = await compressAndConvertToBase64(img);
+              return compressedBase64;
+            }
           }
         });
         
