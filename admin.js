@@ -6,7 +6,8 @@ import {
   updateDoc, 
   deleteDoc, 
   query, 
-  orderBy 
+  orderBy,
+  addDoc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { 
   signInWithEmailAndPassword, 
@@ -16,7 +17,7 @@ import {
 
 // Admin Panel State
 let currentUser = null;
-let databaseData = { newsletter: [], inquiries: [], callbacks: [], stats: {} };
+let databaseData = { newsletter: [], inquiries: [], callbacks: [], stats: {}, properties: [] };
 
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,6 +30,7 @@ function initAdmin() {
   setupTabListeners();
   setupSearchListeners();
   setupExportListeners();
+  setupPropertyListeners();
 }
 
 // ==========================================
@@ -106,17 +108,32 @@ async function fetchDashboardData() {
     const newsletterQuery = query(collection(db, "newsletter"), orderBy("created_at", "desc"));
     const inquiriesQuery = query(collection(db, "inquiries"), orderBy("created_at", "desc"));
     const callbacksQuery = query(collection(db, "callbacks"), orderBy("created_at", "desc"));
+    const propertiesQuery = query(collection(db, "properties"), orderBy("sortOrder", "asc"));
 
-    const [newsletterSnap, inquiriesSnap, callbacksSnap] = await Promise.all([
+    const [newsletterSnap, inquiriesSnap, callbacksSnap, propertiesSnap] = await Promise.all([
       getDocs(newsletterQuery),
       getDocs(inquiriesQuery),
-      getDocs(callbacksQuery)
+      getDocs(callbacksQuery),
+      getDocs(propertiesQuery).catch(err => {
+        console.warn("Failed to fetch properties:", err);
+        return { docs: [] };
+      })
     ]);
     
     // Map documents to state arrays
     databaseData.newsletter = newsletterSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     databaseData.inquiries = inquiriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     databaseData.callbacks = callbacksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    databaseData.properties = propertiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Seed default properties if database is empty
+    if (databaseData.properties.length === 0) {
+      console.log("No properties found in Firestore. Seeding default properties...");
+      await seedDefaultProperties();
+      // Refetch after seeding
+      const freshSnap = await getDocs(propertiesQuery);
+      databaseData.properties = freshSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
     
     // Aggregate statistics
     databaseData.stats = {
@@ -159,6 +176,7 @@ function renderTables() {
   renderInquiriesTable();
   renderCallbacksTable();
   renderNewsletterTable();
+  renderPropertiesTable();
 }
 
 // Render Contact Inquiries Table
@@ -445,4 +463,320 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function renderPropertiesTable() {
+  const tbody = document.getElementById('properties-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  
+  const entries = databaseData.properties || [];
+  if (entries.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="no-data">No properties found.</td></tr>`;
+    return;
+  }
+  
+  entries.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = row.id;
+    
+    tr.innerHTML = `
+      <td style="font-weight: 600;">${escapeHtml(row.title)}</td>
+      <td><span class="badge" style="background: rgba(83, 158, 64, 0.08); color: #356927;">${escapeHtml(row.type)}</span></td>
+      <td>${escapeHtml(row.location)}</td>
+      <td>${escapeHtml(row.priceLabel)}</td>
+      <td>${row.sortOrder || 0}</td>
+      <td>
+        <div class="row-actions">
+          <button class="action-btn action-status-btn" onclick="openEditPropertyModal('${row.id}')" title="Edit Property">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+          <button class="action-btn action-delete-btn" onclick="deleteProperty('${row.id}')" title="Delete Property">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.openEditPropertyModal = function(id) {
+  const prop = databaseData.properties.find(p => p.id === id);
+  if (!prop) return;
+  
+  // Set form title
+  document.getElementById('property-modal-title-text').textContent = 'Edit Property';
+  
+  // Set hidden ID
+  document.getElementById('property-doc-id').value = prop.id;
+  
+  // Set fields
+  document.getElementById('prop-title').value = prop.title || '';
+  document.getElementById('prop-type').value = prop.type || 'villa';
+  document.getElementById('prop-location-key').value = prop.locationKey || 'ecr';
+  document.getElementById('prop-location').value = prop.location || '';
+  document.getElementById('prop-price').value = prop.price || 0;
+  document.getElementById('prop-price-label').value = prop.priceLabel || '';
+  document.getElementById('prop-beds').value = prop.beds || 0;
+  document.getElementById('prop-baths').value = prop.baths || 0;
+  document.getElementById('prop-sqft').value = prop.sqft || 0;
+  document.getElementById('prop-sort-order').value = prop.sortOrder || 10;
+  
+  // Join images by newline
+  document.getElementById('prop-images').value = (prop.images || []).join('\n');
+  
+  // Join features by comma
+  document.getElementById('prop-features').value = (prop.features || []).join(', ');
+  
+  document.getElementById('prop-description').value = prop.description || '';
+  
+  // Agent fields
+  document.getElementById('prop-agent-name').value = prop.agent?.name || 'Murugan Kanda';
+  document.getElementById('prop-agent-role').value = prop.agent?.role || 'Founder & Principal Consultant';
+  document.getElementById('prop-agent-image').value = prop.agent?.image || 'murugan.png';
+  
+  // Show Modal
+  document.getElementById('property-form-modal').classList.add('active');
+};
+
+window.deleteProperty = async function(id) {
+  if (!confirm('Are you sure you want to delete this property permanently?')) {
+    return;
+  }
+  
+  try {
+    const docRef = doc(db, 'properties', id);
+    await deleteDoc(docRef);
+    fetchDashboardData();
+  } catch (err) {
+    console.error('Error deleting property:', err);
+    alert('Failed to delete property.');
+  }
+};
+
+function setupPropertyListeners() {
+  const addBtn = document.getElementById('add-property-btn');
+  const modal = document.getElementById('property-form-modal');
+  const closeBtn = document.getElementById('property-modal-close');
+  const cancelBtn = document.getElementById('property-form-cancel');
+  const form = document.getElementById('property-form');
+  
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      // Reset form
+      form.reset();
+      document.getElementById('property-doc-id').value = '';
+      document.getElementById('property-modal-title-text').textContent = 'Add New Property';
+      
+      // Set default agent values
+      document.getElementById('prop-agent-name').value = 'Murugan Kanda';
+      document.getElementById('prop-agent-role').value = 'Founder & Principal Consultant';
+      document.getElementById('prop-agent-image').value = 'murugan.png';
+      
+      // Show Modal
+      modal.classList.add('active');
+    });
+  }
+  
+  const closeModal = () => {
+    modal.classList.remove('active');
+  };
+  
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  
+  // Close modal when clicking outside card
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+  
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const docId = document.getElementById('property-doc-id').value;
+      
+      // Parse image URLs (one per line)
+      const imagesText = document.getElementById('prop-images').value;
+      const images = imagesText.split('\n')
+        .map(url => url.trim())
+        .filter(url => url !== '');
+        
+      // Parse features (comma separated)
+      const featuresText = document.getElementById('prop-features').value;
+      const features = featuresText.split(',')
+        .map(f => f.trim())
+        .filter(f => f !== '');
+        
+      const propertyPayload = {
+        title: document.getElementById('prop-title').value.trim(),
+        type: document.getElementById('prop-type').value,
+        locationKey: document.getElementById('prop-location-key').value,
+        location: document.getElementById('prop-location').value.trim(),
+        price: parseInt(document.getElementById('prop-price').value),
+        priceLabel: document.getElementById('prop-price-label').value.trim(),
+        beds: parseInt(document.getElementById('prop-beds').value || 0),
+        baths: parseInt(document.getElementById('prop-baths').value || 0),
+        sqft: parseInt(document.getElementById('prop-sqft').value),
+        sortOrder: parseInt(document.getElementById('prop-sort-order').value || 10),
+        images: images,
+        features: features,
+        description: document.getElementById('prop-description').value.trim(),
+        agent: {
+          name: document.getElementById('prop-agent-name').value.trim() || 'Murugan Kanda',
+          role: document.getElementById('prop-agent-role').value.trim() || 'Founder & Principal Consultant',
+          image: document.getElementById('prop-agent-image').value.trim() || 'murugan.png'
+        }
+      };
+      
+      try {
+        if (docId) {
+          // Edit Mode
+          const docRef = doc(db, 'properties', docId);
+          await updateDoc(docRef, propertyPayload);
+          console.log("Property updated successfully!");
+        } else {
+          // Add Mode
+          await addDoc(collection(db, 'properties'), propertyPayload);
+          console.log("Property created successfully!");
+        }
+        
+        closeModal();
+        fetchDashboardData();
+      } catch (err) {
+        console.error('Error saving property:', err);
+        alert('Error saving property data to Firestore. Verify security rules.');
+      }
+    });
+  }
+}
+
+async function seedDefaultProperties() {
+  const defaultProperties = [
+    {
+      title: "Kanda Royal Villa",
+      location: "ECR Road, Chennai",
+      locationKey: "ecr",
+      type: "villa",
+      price: 45000000,
+      priceLabel: "₹4.50 Crores",
+      beds: 4,
+      baths: 4,
+      sqft: 3800,
+      images: [
+        "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80"
+      ],
+      description: "Located along the scenic East Coast Road (ECR), this magnificent 4-bedroom villa offers the ultimate luxury beachside living. Fully automated smart-home systems, an infinity pool with a wooden deck, a landscaped private garden, and high ceilings that capture sea breezes. Perfect for families looking for quiet majesty within city reach.",
+      features: ["Infinity Pool", "Sea View", "Home Automation", "Private Garden", "Servant Quarters", "24/7 Security"],
+      sortOrder: 1,
+      agent: { name: "Murugan Kanda", role: "Founder & Principal Consultant", image: "murugan.png" }
+    },
+    {
+      title: "Emerald Heights Apartment",
+      location: "Adyar, Chennai",
+      locationKey: "adyar",
+      type: "apartment",
+      price: 18000000,
+      priceLabel: "₹1.80 Crores",
+      beds: 3,
+      baths: 3,
+      sqft: 1850,
+      images: [
+        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1000&q=80"
+      ],
+      description: "Nestled in the prime leafy avenue of Adyar, Chennai, this modern 3 BHK apartment combines urban connectivity with residential calm. Features modular Italian kitchen systems, Italian marble flooring, double-glazed soundproof balconies, and access to premium health club facilities inside the tower complex.",
+      features: ["Italian Marble", "Modular Kitchen", "Gym Access", "Power Backup", "Covered Parking", "Water Treatment"],
+      sortOrder: 2,
+      agent: { name: "Murugan Kanda", role: "Founder & Principal Consultant", image: "murugan.png" }
+    },
+    {
+      title: "Jungle View Estate",
+      location: "Naidupuram, Kodaikanal",
+      locationKey: "kodaikanal",
+      type: "villa",
+      price: 32000000,
+      priceLabel: "₹3.20 Crores",
+      beds: 3,
+      baths: 3,
+      sqft: 2500,
+      images: [
+        "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1000&q=80"
+      ],
+      description: "An elegant stone-walled boutique villa in the mist-laden peaks of Kodaikanal. Boasts panoramic mountain views, functional wood fireplace chimneys, floor-to-ceiling glass walls, and a multi-level terrace garden. This property is highly sought-after both as a luxury vacation home and an active tourist home-stay investment.",
+      features: ["Fireplace", "Mountain Vista", "Bespoke Stone Work", "Terrace Garden", "Wood Flooring", "Barbecue Zone"],
+      sortOrder: 3,
+      agent: { name: "Murugan Kanda", role: "Founder & Principal Consultant", image: "murugan.png" }
+    },
+    {
+      title: "Kanda Commercial Plaza",
+      location: "OMR, Chennai",
+      locationKey: "omr",
+      type: "commercial",
+      price: 120000000,
+      priceLabel: "₹12.00 Crores",
+      beds: 0,
+      baths: 6,
+      sqft: 8500,
+      images: [
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80"
+      ],
+      description: "A prominent corporate building with prime visibility on Old Mahabalipuram Road (OMR), Chennai's IT Corridor. Features dynamic glass facades, high-speed elevators, centralized VRF air conditioning, and complete compliance with commercial building regulations. Fully leased out to high-credit multinational tenants, generating high immediate yields.",
+      features: ["IT Corridor Frontage", "VRF Air Conditioning", "High-speed Lift", "100% DG Backup", "Fire Safety Systems", "Multi-car Parking"],
+      sortOrder: 4,
+      agent: { name: "Murugan Kanda", role: "Founder & Principal Consultant", image: "murugan.png" }
+    },
+    {
+      title: "Serene Beachside Condo",
+      location: "Mahabalipuram, Chennai",
+      locationKey: "ecr",
+      type: "apartment",
+      price: 26000000,
+      priceLabel: "₹2.60 Crores",
+      beds: 2,
+      baths: 2,
+      sqft: 1400,
+      images: [
+        "https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1000&q=80"
+      ],
+      description: "Wake up to the sounds of the ocean in this gorgeous, premium 2 BHK beach condo. Features a spacious sea-facing balcony, dynamic ventilation, open-concept lounge designs, luxury bathroom fixtures, and private pathways down to the sandy shores.",
+      features: ["Direct Beach Access", "Sea Balcony", "Rooftop Lounge", "Gated Community", "Water Softener", "Fitness Club"],
+      sortOrder: 5,
+      agent: { name: "Murugan Kanda", role: "Founder & Principal Consultant", image: "murugan.png" }
+    },
+    {
+      title: "Golden Crest Land Plot",
+      location: "Saravanampatti, Coimbatore",
+      locationKey: "coimbatore",
+      type: "land",
+      price: 9500000,
+      priceLabel: "₹95.00 Lakhs",
+      beds: 0,
+      baths: 0,
+      sqft: 2400,
+      images: [
+        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=80"
+      ],
+      description: "A premium gated residential plot of 2400 square feet (1 Ground) located in the booming IT and educational hub of Saravanampatti, Coimbatore. DTCP approved, black-top roads, street lighting, compound walls, and individual drinking water pipelines are fully laid out and ready for construction.",
+      features: ["DTCP Approved Layout", "Blacktop Roads", "Street Lighting", "24/7 Water Supply", "Compound Wall", "High Appreciation Zone"],
+      sortOrder: 6,
+      agent: { name: "Murugan Kanda", role: "Founder & Principal Consultant", image: "murugan.png" }
+    }
+  ];
+
+  for (const prop of defaultProperties) {
+    try {
+      await addDoc(collection(db, "properties"), prop);
+    } catch (e) {
+      console.error("Error seeding property:", prop.title, e);
+    }
+  }
 }
