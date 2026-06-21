@@ -25,6 +25,29 @@ let currentUser = null;
 let databaseData = { newsletter: [], inquiries: [], callbacks: [], stats: {}, properties: [], locations: [], types: [], budgets: [] };
 let propertyFormImages = [];
 
+const fallbackLocations = [
+  { key: "ecr", label: "ECR" },
+  { key: "adyar", label: "Adyar" },
+  { key: "omr", label: "OMR" },
+  { key: "kodaikanal", label: "Kodaikanal" },
+  { key: "coimbatore", label: "Coimbatore" }
+];
+
+const fallbackTypes = [
+  { key: "villa", label: "Villa" },
+  { key: "apartment", label: "Apartment" },
+  { key: "commercial", label: "Commercial" },
+  { key: "land", label: "Premium Land" }
+];
+
+const fallbackBudgets = [
+  { value: 10000000, label: "₹1.00 Crore" },
+  { value: 20000000, label: "₹2.00 Crores" },
+  { value: 30000000, label: "₹3.00 Crores" },
+  { value: 50000000, label: "₹5.00 Crores" },
+  { value: 100000000, label: "₹10.00 Crores" }
+];
+
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
   initAdmin();
@@ -120,26 +143,15 @@ async function fetchDashboardData() {
     const typesQuery = query(collection(db, "types"), orderBy("label", "asc"));
     const budgetsQuery = query(collection(db, "budgets"), orderBy("value", "asc"));
 
+    // Gracefully catch errors for each collection fetch so security rules issues don't crash dashboard
     const [newsletterSnap, inquiriesSnap, callbacksSnap, propertiesSnap, locationsSnap, typesSnap, budgetsSnap] = await Promise.all([
-      getDocs(newsletterQuery),
-      getDocs(inquiriesQuery),
-      getDocs(callbacksQuery),
-      getDocs(propertiesQuery).catch(err => {
-        console.warn("Failed to fetch properties:", err);
-        return { docs: [] };
-      }),
-      getDocs(locationsQuery).catch(err => {
-        console.warn("Failed to fetch locations:", err);
-        return { docs: [] };
-      }),
-      getDocs(typesQuery).catch(err => {
-        console.warn("Failed to fetch types:", err);
-        return { docs: [] };
-      }),
-      getDocs(budgetsQuery).catch(err => {
-        console.warn("Failed to fetch budgets:", err);
-        return { docs: [] };
-      })
+      getDocs(newsletterQuery).catch(err => { console.warn("Failed to fetch newsletter:", err); return { docs: [] }; }),
+      getDocs(inquiriesQuery).catch(err => { console.warn("Failed to fetch inquiries:", err); return { docs: [] }; }),
+      getDocs(callbacksQuery).catch(err => { console.warn("Failed to fetch callbacks:", err); return { docs: [] }; }),
+      getDocs(propertiesQuery).catch(err => { console.warn("Failed to fetch properties:", err); return { docs: [] }; }),
+      getDocs(locationsQuery).catch(err => { console.warn("Failed to fetch locations:", err); return { docs: [] }; }),
+      getDocs(typesQuery).catch(err => { console.warn("Failed to fetch types:", err); return { docs: [] }; }),
+      getDocs(budgetsQuery).catch(err => { console.warn("Failed to fetch budgets:", err); return { docs: [] }; })
     ]);
     
     // Map documents to state arrays
@@ -151,42 +163,68 @@ async function fetchDashboardData() {
     databaseData.types = typesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     databaseData.budgets = budgetsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // Seed default properties if database is empty
-    if (databaseData.properties.length === 0) {
+    // Seed default properties if database is empty (and we didn't fail to fetch)
+    if (databaseData.properties.length === 0 && propertiesSnap.docs.length > 0) {
       console.log("No properties found in Firestore. Seeding default properties...");
-      await seedDefaultProperties();
-      // Refetch after seeding
-      const freshSnap = await getDocs(propertiesQuery);
+      await seedDefaultProperties().catch(err => console.error("Error seeding properties:", err));
+      const freshSnap = await getDocs(propertiesQuery).catch(() => ({ docs: [] }));
       databaseData.properties = freshSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
-    // Seed default filters if empty
+    // Seed default filters if empty. Fall back to local defaults if seeding or fetching fails (due to security rules).
     let needFiltersRefetch = false;
-    if (databaseData.locations.length === 0) {
+    
+    if (locationsSnap.docs.length === 0 && databaseData.locations.length === 0) {
       console.log("No locations found in Firestore. Seeding default locations...");
-      await seedDefaultLocations();
-      needFiltersRefetch = true;
+      try {
+        await seedDefaultLocations();
+        needFiltersRefetch = true;
+      } catch (err) {
+        console.warn("Could not seed locations:", err);
+        databaseData.locations = fallbackLocations.map((item, idx) => ({ id: `fallback-${idx}`, ...item }));
+      }
     }
-    if (databaseData.types.length === 0) {
+    
+    if (typesSnap.docs.length === 0 && databaseData.types.length === 0) {
       console.log("No types found in Firestore. Seeding default types...");
-      await seedDefaultTypes();
-      needFiltersRefetch = true;
+      try {
+        await seedDefaultTypes();
+        needFiltersRefetch = true;
+      } catch (err) {
+        console.warn("Could not seed types:", err);
+        databaseData.types = fallbackTypes.map((item, idx) => ({ id: `fallback-${idx}`, ...item }));
+      }
     }
-    if (databaseData.budgets.length === 0) {
+    
+    if (budgetsSnap.docs.length === 0 && databaseData.budgets.length === 0) {
       console.log("No budgets found in Firestore. Seeding default budgets...");
-      await seedDefaultBudgets();
-      needFiltersRefetch = true;
+      try {
+        await seedDefaultBudgets();
+        needFiltersRefetch = true;
+      } catch (err) {
+        console.warn("Could not seed budgets:", err);
+        databaseData.budgets = fallbackBudgets.map((item, idx) => ({ id: `fallback-${idx}`, ...item }));
+      }
     }
 
     if (needFiltersRefetch) {
       const [freshLocs, freshTypes, freshBudgets] = await Promise.all([
-        getDocs(locationsQuery),
-        getDocs(typesQuery),
-        getDocs(budgetsQuery)
+        getDocs(locationsQuery).catch(() => ({ docs: [] })),
+        getDocs(typesQuery).catch(() => ({ docs: [] })),
+        getDocs(budgetsQuery).catch(() => ({ docs: [] }))
       ]);
-      databaseData.locations = freshLocs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      databaseData.types = freshTypes.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      databaseData.budgets = freshBudgets.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      databaseData.locations = freshLocs.docs.length > 0 
+        ? freshLocs.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        : (databaseData.locations.length > 0 ? databaseData.locations : fallbackLocations.map((item, idx) => ({ id: `fallback-${idx}`, ...item })));
+        
+      databaseData.types = freshTypes.docs.length > 0 
+        ? freshTypes.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        : (databaseData.types.length > 0 ? databaseData.types : fallbackTypes.map((item, idx) => ({ id: `fallback-${idx}`, ...item })));
+        
+      databaseData.budgets = freshBudgets.docs.length > 0 
+        ? freshBudgets.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        : (databaseData.budgets.length > 0 ? databaseData.budgets : fallbackBudgets.map((item, idx) => ({ id: `fallback-${idx}`, ...item })));
     }
     
     // Aggregate statistics
@@ -1030,6 +1068,10 @@ function renderBudgetsList() {
 }
 
 window.deleteFilterItem = async function(collectionName, id) {
+  if (id.startsWith('fallback-')) {
+    alert("This is a local fallback option and cannot be deleted from the database.");
+    return;
+  }
   if (!confirm(`Are you sure you want to delete this option permanently?`)) {
     return;
   }
@@ -1039,7 +1081,7 @@ window.deleteFilterItem = async function(collectionName, id) {
     fetchDashboardData();
   } catch (err) {
     console.error("Error deleting filter option:", err);
-    alert("Failed to delete option.");
+    alert("Failed to delete option. Verify your Firestore Security Rules allow writes to this collection.");
   }
 };
 
