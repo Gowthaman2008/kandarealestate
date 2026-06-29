@@ -2163,12 +2163,8 @@ textarea.form-control {
   .footer-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-}
 
-@media (max-width: 768px) {
-  .section {
-    padding: 70px 0;
-  }
+  /* Header mobile layout activation at 1024px */
   .header .container {
     padding-top: 15px;
     padding-bottom: 15px;
@@ -2247,7 +2243,7 @@ textarea.form-control {
     opacity: 1;
   }
   .nav-menu .nav-link::after {
-    display: none; /* remove hover line tracker on mobile drawer */
+    display: none;
   }
   .nav-menu .nav-link.active {
     color: var(--gold-primary);
@@ -2339,6 +2335,12 @@ textarea.form-control {
   }
   .header-schedule-btn {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 70px 0;
   }
   .hero-title {
     font-size: 2.3rem;
